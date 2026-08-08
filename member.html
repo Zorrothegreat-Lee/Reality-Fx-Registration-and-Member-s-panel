@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My RFX Account — Reality FX</title>
+<link rel="icon" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/system.css">
+</head>
+<body>
+<div class="wrap">
+<div class="reg-shell">
+
+  <header class="reg-head">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <img src="assets/logo.svg" alt="Reality FX" style="width:190px;">
+    </div>
+    <div class="secure"><span class="ic" data-icon="lock"></span> Members · RFX account</div>
+  </header>
+
+  <div class="reg-body">
+
+    <!-- LOGIN -->
+    <div id="screen-login" class="reg-step" hidden>
+      <div class="card card-gold" style="text-align:center;padding:46px 38px;">
+        <div class="hero-ic" data-icon="user" style="margin:0 auto 14px;"></div>
+        <div class="eyebrow" style="margin-bottom:8px;">Members access</div>
+        <h2 class="display" style="font-size:28px;">My <span class="gold">RFX account</span></h2>
+        <p class="sub" style="margin:12px auto 26px;">Sign in with the email on your enrollment and your Student Code — the one revealed on your completion screen.</p>
+        <div class="field" style="text-align:left;">
+          <label>Email</label>
+          <input class="input" id="m-email" type="email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="field" style="text-align:left;">
+          <label>Student Code or Student ID</label>
+          <input class="input" id="m-code" placeholder="e.g. RFX-VGNNAC or RFX-10482">
+        </div>
+        <button class="btn btn-gold btn-block" id="m-login"><span data-icon="unlock"></span> Sign in</button>
+        <div class="small" id="m-lockout" hidden style="margin-top:14px;padding:12px 14px;border:1px solid rgba(224,96,79,0.5);border-radius:10px;background:var(--danger-dim);color:#f0a89c;line-height:1.5;"></div>
+        <p class="small faint" style="margin-top:16px;">Haven't registered yet? Use the secure registration link from your email.</p>
+      </div>
+    </div>
+
+    <!-- PANEL -->
+    <div id="screen-panel" class="reg-step" hidden>
+      <div class="member-head">
+        <div>
+          <div class="eyebrow" id="mp-eyebrow">Reality FX · Member access</div>
+          <h1 class="display" style="font-size:26px;" id="mp-name"></h1>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <span id="mp-state"></span>
+          <button class="btn btn-dark btn-sm" id="mp-logout"><span data-icon="logout"></span> Sign out</button>
+        </div>
+      </div>
+      <div class="member-grid" id="mp-content"></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="js/db.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/pdf.js"></script>
+<script src="js/member.js"></script>
+<script src="js/bot.js"></script>
+</body>
+</html>

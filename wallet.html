@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Credit & Refunds — Reality FX Enrollment</title>
+<link rel="icon" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/system.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="shell">
+    <aside class="sidebar">
+      <a href="index.html"><img src="assets/logo.svg" alt="Reality FX Registrar" class="brand-logo"></a>
+      <div class="brand-tag">The Trading Academy</div>
+      <nav class="nav">
+        <a class="nav-item" href="admin.html"><span class="ni-ic" data-icon="shield"></span>Staff Console</a>
+        <a class="nav-item" href="mailbox.html"><span class="ni-ic" data-icon="mail"></span>Mailbox <span class="pill soon" id="mail-count" style="margin-left:auto;">0</span></a>
+        <a class="nav-item" href="srm.html"><span class="ni-ic" data-icon="users"></span>Students (SRM)</a>
+        <a class="nav-item active" href="wallet.html"><span class="ni-ic" data-icon="card"></span>Credit &amp; Refunds <span class="pill warn" id="payout-count" style="margin-left:auto;">0</span></a>
+        <a class="nav-item" href="index.html"><span class="ni-ic" data-icon="columns"></span>Reception</a>
+        <a class="nav-item" href="member.html"><span class="ni-ic" data-icon="user"></span>Members</a>
+        <div style="height:14px;"></div>
+        <a class="nav-item nav-academy" href="http://127.0.0.1:49270/os/index.html" target="_blank" title="The Academy — where approved students learn"><span class="ni-ic" data-icon="grad"></span><span class="nav-label">RFX OS Academy</span></a>
+      </nav>
+      <div class="nav-foot">System A · RFX Registrar<br>Resolution & credit ledger</div>
+    </aside>
+
+    <main class="main">
+      <div class="page-head head-row">
+        <div>
+          <div class="eyebrow">RFX Enrollment · Resolution ledger</div>
+          <h1 class="display">Credit &amp; <span class="gold">Refunds</span></h1>
+          <p class="sub">Every student has an RFX account starting at R0.00. When a registration cannot be approved, the student chooses credit (instant, fee-free) or a cash refund (consolidated into one monthly batch — one transfer fee, not twenty).</p>
+        </div>
+        <button class="btn btn-gold" id="btn-batch"><span data-icon="clock"></span> Process monthly batch</button>
+      </div>
+
+      <div class="kpis" id="kpis"></div>
+
+      <div class="sec-title">Financial audit <span class="small faint" style="text-transform:none;letter-spacing:0;">— every money event in one file: payments received, credits held, refunds out, awards, referral commissions, staff funding, wallet spend</span></div>
+      <div class="card">
+        <div class="grid2" style="align-items:center;margin-bottom:14px;">
+          <div>
+            <div class="eyebrow" style="margin-bottom:6px;">End-of-day tax &amp; audit file</div>
+            <p class="small" style="margin-bottom:10px;">Download the full money ledger (CSV for Excel, or JSON) or email the end-of-day report to the finance address. Every attempt and every rand is recorded with a reference — nothing moves unlogged.</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+            <button class="btn btn-dark btn-sm" id="btn-fin-csv"><span data-icon="download"></span> Download CSV</button>
+            <button class="btn btn-dark btn-sm" id="btn-fin-json"><span data-icon="download"></span> Download JSON</button>
+            <button class="btn btn-gold btn-sm" id="btn-fin-email"><span data-icon="mail"></span> Email end-of-day log</button>
+          </div>
+        </div>
+        <div id="finance-summary"></div>
+      </div>
+
+      <div class="grid2" style="margin-top:26px;">
+        <div class="card">
+          <div class="eyebrow" style="margin-bottom:10px;">RFX accounts</div>
+          <div id="wallet-list"></div>
+        </div>
+        <div class="card">
+          <div class="eyebrow" style="margin-bottom:10px;">Refund &amp; cash-out payout queue</div>
+          <div id="payout-list"></div>
+        </div>
+      </div>
+
+      <div class="sec-title">Staff wallets <span class="small faint" style="text-transform:none;letter-spacing:0;">— the team has RFX money too · funded by finance, ledgered, audited</span></div>
+      <div class="card">
+        <div class="grid2" style="align-items:end;margin-bottom:12px;">
+          <div>
+            <div class="eyebrow" style="margin-bottom:6px;">Fund a staff wallet</div>
+            <p class="small" style="margin-bottom:10px;">Pick the team member, set the amount and a note (e.g. monthly allowance). The funding is ledgered, emailed to them and security-logged — the same reference can never pay twice.</p>
+            <div class="hint">The deposit method and payday are saved to the team member and power the payroll schedule below — fund on the scheduled day and it becomes the monthly payroll run.</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+            <select class="select" id="sf-staff" style="min-width:180px;"></select>
+            <input class="input" id="sf-amount" type="number" value="1000" min="1" style="width:100px;">
+            <input class="input" id="sf-note" placeholder="Note (shown to them)" style="min-width:170px;">
+            <button class="btn btn-gold btn-sm" id="btn-sf-fund"><span data-icon="send"></span> Fund</button>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;grid-column:1 / -1;margin-top:4px;">
+            <span class="small faint">Deposit method:</span>
+            <select class="select" id="sf-method" style="width:130px;">
+              <option value="paypal">PayPal</option>
+              <option value="bank">Bank transfer</option>
+              <option value="zapper">Zapper</option>
+              <option value="cash">Cash</option>
+            </select>
+            <span class="small faint" style="margin-left:10px;">Monthly payday:</span>
+            <select class="select" id="sf-payday" style="width:150px;"></select>
+            <span class="small faint" id="sf-sched-hint"></span>
+          </div>
+        </div>
+        <div id="staff-wallet-list"></div>
+        <div class="eyebrow" style="margin:20px 0 8px;">Payroll schedule</div>
+        <div id="staff-schedule"></div>
+      </div>
+
+      <div class="sec-title">Awards &amp; giveaways</div>
+      <div class="grid2">
+        <div class="card">
+          <div class="eyebrow" style="margin-bottom:10px;">Ceremony awards</div>
+          <h3 class="serif" style="font-size:18px;margin-bottom:6px;">Prize money straight to student wallets</h3>
+          <p class="small" style="margin-bottom:18px;">Head Boy / Head Girl, best performer of the year — pick the student, set the amount, credit their wallet. Awards never expire and are idempotent: the same reference can never pay twice.</p>
+          <div class="field">
+            <label>Recipient</label>
+            <select class="select" id="aw-student"></select>
+          </div>
+          <div class="field">
+            <label>Or send by wallet number</label>
+            <div style="display:flex;gap:8px;">
+              <input class="input" id="aw-walletno" placeholder="W-XXXXXXXXX" style="flex:1;font-family:ui-monospace,Consolas,monospace;">
+              <button class="btn btn-dark btn-sm" id="btn-resolve-wallet">Resolve</button>
+            </div>
+            <div class="hint" id="aw-wallet-hint">The check digit catches typos before money moves — the resolved student is shown here.</div>
+          </div>
+          <div class="grid2">
+            <div class="field">
+              <label>Amount (R)</label>
+              <input class="input" id="aw-amount" type="number" value="1000" min="1">
+            </div>
+            <div class="field">
+              <label>Reference</label>
+              <input class="input" id="aw-ref" placeholder="e.g. AWARD-2026-01">
+            </div>
+          </div>
+          <div class="field">
+            <label>Reason (shown to the student)</label>
+            <input class="input" id="aw-reason" placeholder="e.g. Best student of the year 2026 — Head Boy">
+          </div>
+          <button class="btn btn-gold" id="btn-award"><span data-icon="award"></span> Credit award to wallet</button>
+        </div>
+
+        <div class="card">
+          <div class="eyebrow" style="margin-bottom:10px;">Giveaway pot</div>
+          <h3 class="serif" style="font-size:18px;margin-bottom:6px;">Fair, randomised draw over active students</h3>
+          <p class="small" style="margin-bottom:18px;">The pot is drawn with a crypto-random shuffle over the ACTIVE pool — winners, pool size and time are recorded for the audit trail. Perfect for a live ceremony: run the draw on stage.</p>
+          <div class="field">
+            <label>Title</label>
+            <input class="input" id="gv-title" placeholder="e.g. Live ceremony mega-giveaway">
+          </div>
+          <div class="grid2">
+            <div class="field">
+              <label>Amount per winner (R)</label>
+              <input class="input" id="gv-amount" type="number" value="500" min="1">
+            </div>
+            <div class="field">
+              <label>Number of winners</label>
+              <input class="input" id="gv-winners" type="number" value="1" min="1">
+            </div>
+          </div>
+          <button class="btn btn-gold" id="btn-giveaway"><span data-icon="gift"></span> Run the draw</button>
+        </div>
+      </div>
+
+      <div class="sec-title">Refund intelligence <span class="small faint" style="text-transform:none;letter-spacing:0;">— every refund is scored against the identity's history; flags are review triggers, never auto-verdicts</span></div>
+      <div class="card" id="refund-intel"></div>
+
+      <div class="sec-title">Referral marketing <span class="small faint" style="text-transform:none;letter-spacing:0;">— where every student came from, and what it costs to acquire them. Commissions vest only after the refund window: money subject to change is not yet earned.</span></div>
+      <div class="card" id="referral-intel"></div>
+
+      <div class="sec-title">Awards &amp; giveaway history</div>
+      <div class="card" id="award-history"></div>
+
+      <div class="sec-title">Consolidated batch history</div>
+      <div class="card" id="batch-history"></div>
+
+      <div class="sec-title">Merch fulfilment <span class="small faint" style="text-transform:none;letter-spacing:0;">— earned rewards (80%+ average, signalled by RFX OS) &amp; merch bought with credit</span></div>
+      <div class="card">
+        <div class="grid2" style="align-items:end;margin-bottom:14px;">
+          <div>
+            <div class="eyebrow" style="margin-bottom:6px;">Simulate an RFX OS achievement (demo)</div>
+            <p class="small" style="margin-bottom:10px;">Production: RFX OS sends this bridge event when a student's average hits 80%+. Here you can trigger it for any active student — the reward (free tee + hoody) lands as an order, idempotent by reference.</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <select class="select" id="mh-student" style="flex:1;min-width:200px;"></select>
+            <input class="input" id="mh-avg" type="number" value="85" min="0" max="100" style="width:90px;" title="Average %">
+            <input class="input" id="mh-ref" placeholder="Achievement ref" style="width:180px;">
+            <button class="btn btn-gold btn-sm" id="btn-mh-claim"><span data-icon="trophy"></span> Claim reward</button>
+          </div>
+        </div>
+        <div id="merch-queue"></div>
+      </div>
+
+      <div class="sec-title">Package catalog <span class="small faint" style="text-transform:none;letter-spacing:0;">— codes students spend credit on · Lee mirrors these on the website store</span></div>
+      <div class="card">
+        <div id="catalog-list"></div>
+        <div class="grid2" style="margin-top:14px;">
+          <div class="field">
+            <label>Code</label>
+            <input class="input" id="cat-code" placeholder="e.g. RFX-UPGRADE-01" style="font-family:ui-monospace,Consolas,monospace;">
+          </div>
+          <div class="field">
+            <label>Price (R)</label>
+            <input class="input" id="cat-price" type="number" placeholder="3510" min="1">
+          </div>
+          <div class="field">
+            <label>Name</label>
+            <input class="input" id="cat-name" placeholder="e.g. Reality Academy — Professional Program">
+          </div>
+          <div class="field">
+            <label>Note (shown to students)</label>
+            <input class="input" id="cat-note" placeholder="e.g. Upgrade to the Professional Program">
+          </div>
+        </div>
+        <button class="btn btn-gold btn-sm" id="btn-cat-add"><span data-icon="plus"></span> Add package</button>
+        <p class="small faint" style="margin-top:10px;">Students see this list sorted by price ascending (cheapest first — what they can afford is at the top) and can only pay when their spendable balance covers a package. The store sends the same code — an unknown code is refused, never guessed.</p>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="js/db.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/wallet.js"></script>
+</body>
+</html>
