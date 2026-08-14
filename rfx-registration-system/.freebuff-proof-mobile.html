@@ -43,6 +43,25 @@
     } catch (e) {
       document.body.textContent = 'ERR: ' + e.message;
     }
+    setTimeout(function () {
+      var out = {};
+      var t = document.querySelector('.trust-card');
+      var mr = document.querySelector('.mach-rings');
+      if (t) {
+        var r = t.querySelector('.trust-ring');
+        var tr = t.getBoundingClientRect(), rr = r.getBoundingClientRect();
+        out.trustCenterDelta = Math.round(Math.abs((rr.left + rr.width / 2) - (tr.left + tr.width / 2)));
+        out.trustFlexDir = getComputedStyle(t).flexDirection;
+        out.trustCardW = Math.round(tr.width);
+      }
+      if (mr) {
+        out.machCols = getComputedStyle(mr).gridTemplateColumns;
+        out.ringCount = mr.querySelectorAll('.trust-ring').length;
+      }
+      out.vw = window.innerWidth;
+      out.ready = true;
+      document.body.setAttribute('data-out', JSON.stringify(out));
+    }, 300);
   });
 </script>
 </body>

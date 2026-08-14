@@ -46,6 +46,12 @@ while (my $c = $sock->accept()) {
   my ($method, $path) = split(/\s+/, $req || '');
   while (<$c>) { last if /^\r?$/; }   # drain headers
 
+  # an empty request line (a bare probe / keep-alive ping) must never kill the
+  # server — close the socket and keep serving the next connection.
+  if (!defined $path || $path eq '') {
+    close $c; next;
+  }
+
   if (($method || 'GET') ne 'GET') {
     respond($c, '405 Method Not Allowed', 'text/plain', '');
     close $c; next;

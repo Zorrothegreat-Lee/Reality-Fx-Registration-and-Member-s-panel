@@ -1,4 +1,0 @@
-Use of uninitialized value $path in substitution (s///) at serve.pl line 53.
-Use of uninitialized value $path in substitution (s///) at serve.pl line 54.
-Use of uninitialized value $path in pattern match (m//) at serve.pl line 55.
-Use of uninitialized value $path in concatenation (.) or string at serve.pl line 55.
