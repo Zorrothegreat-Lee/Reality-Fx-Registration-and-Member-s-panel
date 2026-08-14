@@ -1,0 +1,5 @@
+[2026-08-06T22:13:04.354Z] Starting Freebuff orchestrator
+Runtime: C:\Users\user\AppData\Local\Programs\@codebufffreebuff-desktop\resources\bun\bun.exe
+Arguments: C:\Users\user\AppData\Local\Programs\@codebufffreebuff-desktop\resources\orchestrator\orchestrator.js
+
+freebuff-desktop orchestrator listening on http://127.0.0.1:54316

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff Console — Reality FX Enrollment</title>
+<link rel="icon" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/system.css?v=20260810-59">
+</head>
+<body>
+<div class="wrap">
+  <div class="shell">
+    <aside class="sidebar">
+      <a href="index.html"><img src="assets/logo.svg" alt="Reality FX Registrar" class="brand-logo"></a>
+      <div class="brand-tag">The Trading Academy</div>
+      <nav class="nav">
+        <a class="nav-item active" href="admin.html"><span class="ni-ic" data-icon="shield"></span>Staff Console</a>
+        <a class="nav-item" href="srm.html"><span class="ni-ic" data-icon="users"></span>Students (SRM)</a>
+        <a class="nav-item" href="mailbox.html"><span class="ni-ic" data-icon="mail"></span>Mailbox <span class="pill soon" id="mail-count" style="margin-left:auto;">0</span></a>
+        <a class="nav-item" href="wallet.html"><span class="ni-ic" data-icon="card"></span>Credit &amp; Refunds <span class="pill warn" id="payout-count" style="margin-left:auto;">0</span></a>
+        <a class="nav-item" href="index.html"><span class="ni-ic" data-icon="columns"></span>Reception</a>
+        <a class="nav-item" href="member.html"><span class="ni-ic" data-icon="user"></span>Members</a>
+        <div style="height:14px;"></div>
+        <a class="nav-item nav-academy" href="http://127.0.0.1:49270/os/index.html" target="_blank" title="The Academy — where approved students learn"><span class="ni-ic" data-icon="grad"></span><span class="nav-label">RFX OS Academy</span></a>
+      </nav>
+      <div class="nav-foot">
+        System A · RFX Registrar<br>
+        <span id="foot-state">state</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="page-head head-row">
+        <div>
+          <div class="eyebrow">RFX Enrollment · Staff Console</div>
+          <h1 class="display">Enrollment &amp; <span class="gold">Registration</span></h1>
+          <p class="sub">The five links that must never break: purchase → registration → approval → secure handoff → confirmation.</p>
+        </div>
+        <div class="pill gold" id="live-pill"><span class="dot ok pulse"></span> System live</div>
+      </div>
+
+      <div class="kpis" id="kpis"></div>
+
+      <div class="sec-title">Registration funnel <span class="small faint" style="text-transform:none;letter-spacing:0;">— links sent → opened → submitted → approved, and how long students take to register</span></div>
+      <div class="card" id="funnel"></div>
+
+      <!-- reconciliation sweep: approved students whose handshake is pending
+           are surfaced here the moment the console loads — the bridge never
+           depends on a tab staying open -->
+      <div id="reconcile" style="display:none;"></div>
+
+      <div class="grid2">
+        <!-- left: create enrollment -->
+        <div class="card">
+          <div class="eyebrow" style="margin-bottom:10px;">New paid enrollment</div>
+          <h3 class="serif" style="font-size:19px;margin-bottom:6px;">The payment system reports a sale</h3>
+          <p class="small" style="margin-bottom:20px;">You never type this by hand — it arrives automatically from the payment provider. The invoice is generated from it instantly.</p>
+
+          <div class="field">
+            <label>Customer name <span class="req">*</span></label>
+            <input class="input" id="f-name" placeholder="e.g. Pedro Zulu">
+          </div>
+          <div class="field">
+            <label>Email <span class="req">*</span></label>
+            <input class="input" id="f-email" type="email" placeholder="student@example.com">
+          </div>
+          <div class="grid2">
+            <div class="field">
+              <label>Course</label>
+              <input class="input" id="f-course" value="Reality Academy — Professional Program">
+            </div>
+            <div class="field">
+              <label>Amount paid <span class="req">*</span></label>
+              <div style="display:flex;gap:8px;">
+                <input class="input" id="f-currency" value="R" style="width:52px;text-align:center;">
+                <input class="input" id="f-price" type="number" value="3510" step="0.01">
+              </div>
+            </div>
+          </div>
+          <div class="grid2">
+            <div class="field">
+              <label>Payment method</label>
+              <select class="select" id="f-method"></select>
+            </div>
+            <div class="field">
+              <label>Transaction ID</label>
+              <input class="input" id="f-txn" placeholder="Auto-generated if left blank">
+            </div>
+          </div>
+          <div class="field">
+            <label>Referral code (how the student found us)</label>
+            <input class="input" id="f-ref" placeholder="e.g. RFX-ABCD23 — optional, powers referral marketing">
+            <div class="hint">This is the <span class="mono" style="font-size:11px;">?ref=CODE</span> the website store passes when a student arrives through a friend's share link. Attribution is captured at enrollment.</div>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;">
+            <button class="btn btn-gold" id="btn-create"><span data-icon="zap"></span> Create enrollment + invoice</button>
+            <button class="btn btn-dark btn-sm" id="btn-webhook" style="align-self:center;"><span data-icon="zap"></span> Simulate PayPal webhook</button>
+            <button class="btn btn-dark btn-sm" id="btn-demo" style="align-self:center;">Load Pedro (demo)</button>
+            <button class="btn btn-ghost btn-sm" id="btn-demopass" style="align-self:center;border-color:rgba(212,175,55,0.4);color:var(--gold);"><span data-icon="gift"></span> Create demo pass</button>
+          </div>
+          <p class="small" style="margin-top:14px;">Creating an enrollment automatically: generates the invoice, sends the <b>invoice email</b>, then the <b>registration email</b> with a secure single-use link. See them in the <a href="mailbox.html" style="color:var(--gold);">Mailbox →</a> <b>Simulate PayPal webhook</b> replays the real inbound: the website reports an approved payment, the machine takes over from there.</p>
+        </div>
+
+        <!-- right: enrollment list -->
+        <div class="card">
+          <div class="eyebrow" style="margin-bottom:10px;">Enrollments</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <h3 class="serif" style="font-size:19px;">All students</h3>
+            <button class="btn btn-dark btn-sm" id="btn-refresh"><span data-icon="refresh"></span> Refresh</button>
+          </div>
+          <div id="enr-list"></div>
+        </div>
+      </div>
+
+      <div class="sec-title">How the five pillars look when they work</div>
+      <div class="card" id="pipeline-demo"></div>
+
+      <div class="sec-title">Security &amp; data hygiene</div>
+      <div class="grid2" style="align-items:start;">
+        <!-- posture + settings -->
+        <div class="card">
+          <div class="eyebrow" style="margin-bottom:12px;">Posture &amp; settings</div>
+          <ul class="audit" id="sec-posture" style="margin-bottom:18px;"></ul>
+          <div class="grid2">
+            <div class="field">
+              <label>Max login attempts</label>
+              <input class="input" id="sec-login-attempts" type="number" min="1" max="20">
+            </div>
+            <div class="field">
+              <label>Login lockout (minutes)</label>
+              <input class="input" id="sec-lockout-mins" type="number" min="1" max="1440">
+            </div>
+          </div>
+          <div class="grid2">
+            <div class="field">
+              <label>Verify-code attempts</label>
+              <input class="input" id="sec-code-attempts" type="number" min="2" max="20">
+            </div>
+            <div class="field">
+              <label>Selfie retention</label>
+              <select class="select" id="sec-selfies">
+                <option value="untilDecision">Until a decision is made (recommended)</option>
+                <option value="keep">Keep for now</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Member session timeout (min)</label>
+              <input class="input" id="sec-session" type="number" min="1" max="240">
+            </div>
+          </div>
+          <button class="btn btn-dark btn-sm" id="sec-save" style="margin-top:4px;"><span data-icon="check"></span> Save security settings</button>
+          <p class="small faint" style="margin-top:14px;">These limits are enforced in this demo. In production they are mirrored and enforced server-side — a client can never be the final gatekeeper.</p>
+        </div>
+
+        <!-- data hygiene + events -->
+        <div class="card">
+          <div class="eyebrow" style="margin-bottom:12px;">Data hygiene &amp; events</div>
+          <div class="access-locked" id="sec-hygiene" style="margin-bottom:18px;"></div>
+          <div class="eyebrow muted" style="margin-bottom:8px;">Recent security events</div>
+          <ul class="audit" id="sec-events"></ul>
+        </div>
+      </div>
+
+      <!-- live proof: the guards firing + how much the store holds -->
+      <div class="grid2" style="align-items:start;">
+        <div class="card">
+          <div class="eyebrow" style="margin-bottom:6px;">Live security self-test</div>
+          <p class="small" style="margin-bottom:14px;">Don't take the guards on faith — fire them. This runs the <b style="color:var(--text);">real enforcement code</b> against a scratch record and cleans up after itself. Nothing touches real students.</p>
+          <button class="btn btn-ghost btn-sm" id="sec-selftest" style="margin-bottom:14px;"><span data-icon="shield"></span> Run the self-test</button>
+          <ul class="audit" id="sec-selftest-results"><li><span class="a-time">—</span><span class="a-txt faint">Not run yet.</span></li></ul>
+        </div>
+        <div class="card">
+          <div class="eyebrow" style="margin-bottom:6px;">Storage capacity</div>
+          <p class="small" style="margin-bottom:14px;">How much of the browser store the system is using, and what that means in students.</p>
+          <div id="sec-storage"></div>
+        </div>
+      </div>
+
+      <!-- the load test proves the machine at scale — in memory only, real code -->
+      <div class="card" style="border-color:rgba(212,175,55,0.4);">
+        <div class="eyebrow gold" style="margin-bottom:6px;">Load test — prove it at scale</div>
+        <p class="small" style="margin-bottom:14px;">Builds <b style="color:var(--text);">thousands of students through the REAL pipeline</b> — payment → enrollment → registration → approval → handoff → ACTIVE, with wallets, awards, referral chains, merch and refunds mixed in — then runs the full audit, the security self-test and a money reconciliation against that entire world. Runs <b style="color:var(--text);">in memory only</b>: your real store is untouched and restored before the report prints.</p>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
+          <label class="small faint" for="lt-count" style="margin-right:2px;">Students</label>
+          <input class="input" id="lt-count" type="number" value="2000" min="10" max="5000" step="100" style="width:110px;">
+          <button class="btn btn-gold" id="btn-loadtest"><span data-icon="zap"></span> Simulate students</button>
+        </div>
+        <p class="small faint" style="margin-bottom:14px;line-height:1.7;">
+          <b style="color:var(--muted);">How to use this:</b> 1) pick a number (2,000 is the full-scale test — start smaller to watch it work) · 2) press <b style="color:var(--text);">Simulate students</b> — it takes a few seconds, that is the point, it is a load test · 3) read the report: the three gold rings are the audit, the security self-test and money reconciliation; the funnel shows every stage; the footprint shows what that many students actually weigh. It runs <b style="color:var(--text);">in memory only</b> — your real data is untouched, and the same seed rebuilds the same academy, so results are reproducible, not luck.
+        </p>
+        <div id="lt-results"></div>
+      </div>
+
+      <!-- the one-click audit gets the full width — its 19-check report needs room -->
+      <div class="card" style="border-color:rgba(212,175,55,0.4);">
+        <div class="eyebrow gold" style="margin-bottom:6px;">One-click full audit + the mechanic</div>
+        <p class="small" style="margin-bottom:14px;">Student complaining? Press this. It re-proves the <b style="color:var(--text);">whole chain live</b> — payment → registration → approval → handoff, plus money reconciliation, identity integrity, store health and every security guard — then reports <b style="color:#7ee2a4;">PASS</b>/<b style="color:#f0a89c;">FAIL</b>. Scratch records are removed; nothing it audits is changed. <b style="color:var(--text);">If something fails</b>, pass the screwdriver to the mechanic — it auto-repairs what is safely machine-fixable, logs every change, and re-proves the chain. Money and human decisions are never auto-touched.</p>
+        <button class="btn btn-gold" id="btn-fullaudit" style="margin-bottom:14px;"><span data-icon="shield"></span> Run full audit</button>
+        <details class="audit-help" style="margin-bottom:14px;">
+          <summary style="cursor:pointer;color:var(--gold-bright);font-size:12.5px;user-select:none;">What does the audit actually check? <span class="small faint">(like walking the electrical fence — press to expand)</span></summary>
+          <div style="margin-top:10px;font-size:12.5px;color:var(--muted);line-height:1.7;">
+            Think of it as <b style="color:var(--text);">walking the whole perimeter of the property with a voltmeter</b> — every few minutes, automatically, whether anyone is looking:
+            <ul style="margin:8px 0 0 18px;padding:0;list-style:disc;">
+              <li><b style="color:var(--text);">The full journey, proven live:</b> it creates a scratch purchase and pushes it through the real pipeline — payment webhook → enrollment → invoice → registration → approval → handshake → ACTIVE — then deletes the scratch. If every stage passes, the chain that students ride works end to end.</li>
+              <li><b style="color:var(--text);">Money reconciles:</b> every wallet ledger is summed and matched against the stored balance, to the cent. No negative balances, no orphaned credit, every rand accounted for.</li>
+              <li><b style="color:var(--text);">Identity integrity:</b> every ACTIVE student holds a real Student ID + Code, no code is ever duplicated, and the Trust Bar ledgers reconcile — the bar a moderator sees is a true record, not a drifted number.</li>
+              <li><b style="color:var(--text);">Store health:</b> a real write→read round-trip proves persistence works and the multi-tab revision guard is alive (a stale tab can never clobber newer data).</li>
+              <li><b style="color:var(--text);">Capacity headroom:</b> how much of the store is used and how many more students fit — honest room-to-grow, never a guess.</li>
+              <li><b style="color:var(--text);">The security guards, re-attacked:</b> the same 5 self-tests that simulate an intruder — brute-forcing logins, guessing verification codes, reusing an expired link, checking selfies are purged after decisions, and proving the one-session rule. All defended, all the time.</li>
+            </ul>
+            If any check fails, <b style="color:var(--text);">the mechanic</b> (one button below) fixes what is safely machine-fixable, logs every change with the operator's name, and re-proves the chain. Money, approvals and human decisions are never auto-touched — those always wait for a person. That is the whole point: <b style="color:var(--text);">you are the eyes, the machine is the fence.</b>
+          </div>
+        </details>
+        <div id="audit-summary" style="display:none;margin-bottom:12px;"></div>
+        <ul class="audit" id="audit-results" style="max-height:340px;overflow:auto;"><li><span class="a-time">—</span><span class="a-txt faint">Not run yet.</span></li></ul>
+      </div>
+
+      <!-- live support — the human line. Sarrah answers instantly; staff reply here. -->
+      <div class="card" style="border-color:rgba(212,175,55,0.4);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <div class="eyebrow gold" style="margin-bottom:0;">Live support — the human line</div>
+          <span class="pill gold" id="support-unread" style="font-size:9px;display:none;">0</span>
+        </div>
+        <p class="small" style="margin-bottom:14px;">Students who are stuck talk to a <b style="color:var(--text);">human</b> here. Sarrah handles the instant answers; this is the line where a real person takes over — and if the problem is the system itself, close this and hand the screwdriver to the mechanic above.</p>
+        <div id="support-list"><div class="small faint">Loading…</div></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="assets/icons.js?v=20260810-59"></script>
+<script src="js/db.js?v=20260810-59"></script>
+<script src="js/ui.js?v=20260810-59"></script>
+<script src="js/pdf.js?v=20260810-59"></script>
+<script src="js/bridge.js?v=20260810-59"></script>
+<script src="js/admin.js?v=20260810-59"></script>
+</body>
+</html>

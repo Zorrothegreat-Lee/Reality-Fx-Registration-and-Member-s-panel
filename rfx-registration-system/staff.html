@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff Portal — Reality FX</title>
+<link rel="icon" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/system.css?v=20260810-59">
+</head>
+<body class="staff-page">
+<div class="wrap">
+  <div class="shell">
+    <aside class="sidebar">
+      <a href="index.html"><img src="assets/logo.svg" alt="Reality FX Registrar" class="brand-logo"></a>
+      <div class="brand-tag">The Trading Academy</div>
+      <nav class="nav">
+        <a class="nav-item active" href="staff.html"><span class="ni-ic" data-icon="userCheck"></span>Staff Portal</a>
+        <a class="nav-item" href="admin.html"><span class="ni-ic" data-icon="shield"></span>Staff Console</a>
+        <a class="nav-item" href="srm.html"><span class="ni-ic" data-icon="users"></span>Students (SRM)</a>
+        <a class="nav-item" href="mailbox.html"><span class="ni-ic" data-icon="mail"></span>Mailbox <span class="pill soon" id="mail-count" style="margin-left:auto;">0</span></a>
+        <a class="nav-item" href="wallet.html"><span class="ni-ic" data-icon="card"></span>Credit &amp; Refunds</a>
+        <a class="nav-item" href="index.html"><span class="ni-ic" data-icon="columns"></span>Reception</a>
+        <a class="nav-item" href="member.html"><span class="ni-ic" data-icon="user"></span>Members</a>
+        <div style="height:14px;"></div>
+        <a class="nav-item nav-academy" href="http://127.0.0.1:49270/os/index.html" target="_blank" title="The Academy — where approved students learn"><span class="ni-ic" data-icon="grad"></span><span class="nav-label">RFX OS Academy</span></a>
+      </nav>
+      <div class="nav-foot">System A · RFX Registrar<br>Team, shifts &amp; coverage</div>
+    </aside>
+
+    <main class="main">
+      <div class="page-head head-row">
+        <div>
+          <div class="eyebrow">RFX Enrollment · Team operations</div>
+          <h1 class="display">Staff <span class="gold">Portal</span></h1>
+          <p class="sub">Staff are hired, not self-registered — an admin creates the account and a one-time invite sets it up. Clock in for your shift and keep the reception promise: fully operational, 24/7.</p>
+        </div>
+        <div class="pill gold" id="on-duty-pill"><span class="dot ok pulse"></span> Reception · 24/7 · checking…</div>
+      </div>
+
+      <!-- INVITE ACTIVATION -->
+      <div class="card card-gold" id="screen-invite" hidden style="max-width:520px;margin-bottom:20px;">
+        <div class="eyebrow" style="margin-bottom:8px;">Your one-time staff invite</div>
+        <h3 class="serif" style="font-size:20px;margin-bottom:4px;" id="inv-name">—</h3>
+        <p class="small" style="margin-bottom:16px;">Welcome aboard. Choose a staff code of at least 6 characters — this is how you sign in to the portal (production: Firebase sets your password).</p>
+        <div class="field">
+          <label>Choose your staff code</label>
+          <input class="input" id="inv-code" type="password" placeholder="At least 6 characters" autocomplete="new-password">
+        </div>
+        <div class="small" id="inv-err" hidden style="margin-bottom:14px;padding:12px 14px;border:1px solid rgba(224,96,79,0.5);border-radius:10px;background:var(--danger-dim);color:#f0a89c;"></div>
+        <button class="btn btn-gold" id="btn-activate"><span data-icon="checkCircle"></span> Activate my staff access</button>
+        <p class="small faint" style="margin-top:12px;">One-time use · expires in 7 days.</p>
+      </div>
+
+      <!-- LOGIN -->
+      <div class="card card-gold" id="screen-login" hidden style="max-width:520px;">
+        <div class="eyebrow" style="margin-bottom:10px;">Staff sign in</div>
+        <p class="small" style="margin-bottom:18px;">Sign in with the email your admin used and the staff code you chose at activation.</p>
+        <div class="field">
+          <label>Work email</label>
+          <input class="input" id="s-email" type="email" placeholder="you@realityfx.co.za">
+        </div>
+        <div class="field">
+          <label>Staff code</label>
+          <input class="input" id="s-code" type="password" placeholder="Your staff code" autocomplete="current-password">
+        </div>
+        <div class="small" id="s-lockout" hidden style="margin-bottom:14px;padding:12px 14px;border:1px solid rgba(224,96,79,0.5);border-radius:10px;background:var(--danger-dim);color:#f0a89c;"></div>
+        <button class="btn btn-gold btn-block" id="btn-staff-login"><span data-icon="unlock"></span> Sign in</button>
+      </div>
+
+      <!-- PANEL -->
+      <div id="screen-panel" class="reg-step" hidden>
+        <div class="member-head" style="margin-bottom:18px;">
+          <div>
+            <div class="eyebrow" style="margin-bottom:4px;">Signed in as <span id="st-role"></span></div>
+            <h2 class="serif" style="font-size:24px;" id="st-name">—</h2>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <span id="st-shift"></span>
+            <button class="btn btn-dark btn-sm" id="btn-logout"><span data-icon="logout"></span> Sign out</button>
+          </div>
+        </div>
+
+        <!-- TODAY'S DUTIES — the robotic manager assigns today's work -->
+        <div class="card" id="duties-card" style="margin-bottom:16px;border-color:rgba(212,175,55,0.35);">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;">
+            <span class="ic" style="color:var(--gold-bright);" data-icon="clipboard"></span>
+            <div style="min-width:0;">
+              <div class="eyebrow" style="margin:0;">Today's duties</div>
+              <div class="small faint" id="manager-note">the robotic manager assigns today's work from live system state</div>
+            </div>
+            <span class="pill gold" id="duty-count" style="margin-left:auto;font-size:9px;">—</span>
+          </div>
+          <div id="duties-list"></div>
+        </div>
+
+        <div class="grid2" style="align-items:start;">
+          <div>
+            <div class="card card-gold" id="shift-card">
+              <div class="eyebrow" style="margin-bottom:10px;">Clock in / out</div>
+              <p class="small" id="shift-status" style="margin-bottom:16px;">Not on a shift yet.</p>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;" id="shift-actions">
+                <button class="btn btn-gold" id="btn-clock-day"><span data-icon="clock"></span> Clock in — Day shift</button>
+                <button class="btn btn-ghost" id="btn-clock-night"><span data-icon="clock"></span> Clock in — Night shift</button>
+                <button class="btn btn-danger" id="btn-clock-out" hidden><span data-icon="logout"></span> Clock out</button>
+              </div>
+              <div class="eyebrow muted" style="margin:18px 0 6px;">My recent shifts</div>
+              <ul class="audit" id="my-shifts"></ul>
+            </div>
+            <div class="card" id="my-wallet-card" style="margin-top:16px;">
+              <div class="eyebrow" style="margin-bottom:6px;">My RFX wallet</div>
+              <p class="small faint" style="margin-bottom:10px;">Funds finance adds to your wallet land here — the same ledger the students have.</p>
+              <div id="my-wallet"></div>
+            </div>
+            <div class="card" id="perf-card" style="margin-top:16px;">
+              <div class="eyebrow" style="margin-bottom:6px;">My performance · staff trust bar</div>
+              <div id="perf-content"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="eyebrow" style="margin-bottom:10px;">On duty right now</div>
+            <ul class="audit" id="roster"></ul>
+            <div class="eyebrow muted" style="margin:18px 0 6px;">The whole team</div>
+            <ul class="audit" id="team-list"></ul>
+          </div>
+        </div>
+
+        <!-- SHIFT COVERAGE — the week at a glance: which hours are covered, which are gaps -->
+        <div class="card" id="coverage-card" style="margin-top:18px;border-color:rgba(212,175,55,0.3);">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;">
+            <span class="ic" style="color:var(--gold-bright);" data-icon="calendar"></span>
+            <div style="min-width:0;">
+              <div class="eyebrow" style="margin:0;">Shift coverage · this week</div>
+              <div class="small faint" id="coverage-sub">every hour of the last 7 days — how many staff were on duty, straight from the shift records</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" id="btn-seed-coverage" hidden style="margin-left:auto;"><span data-icon="zap"></span> Seed demo coverage</button>
+          </div>
+          <div id="coverage-heatmap"></div>
+        </div>
+
+        <!-- TEAM PERFORMANCE — every standing, the logbook, and admin controls -->
+        <div class="card" style="margin-top:18px;">
+          <div class="eyebrow" style="margin-bottom:6px;">Team performance · the whole bar</div>
+          <p class="small faint" style="margin-bottom:12px;">One standard for every desk: standings are shared, the logbook is permanent, and your standing shapes your pay. Admin controls sit beside each name.</p>
+          <div id="team-perf"></div>
+          <div id="shift-sched" hidden style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;">
+            <div class="eyebrow muted" style="margin-bottom:8px;">Schedule shift starts (admin)</div>
+            <p class="small faint" style="margin-bottom:10px;">Set the expected start time for a staff member — more than 15 minutes late is recorded on their bar. Leave the time empty to clear the schedule.</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+              <div class="field" style="min-width:220px;"><label>Team member</label>
+                <select class="select" id="ss-staff"></select></div>
+              <div class="field"><label>Expected start (24h)</label><input class="input" id="ss-time" type="time" style="width:150px;"></div>
+              <button class="btn btn-gold btn-sm" id="btn-shift-time"><span data-icon="clock"></span> Set start time</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- THE STANDARD — staff know the rules before they are ever enforced -->
+        <div class="card" style="margin-top:18px;border-color:rgba(212,175,55,0.35);">
+          <div class="eyebrow" style="margin-bottom:6px;">The standard · how we operate</div>
+          <p class="small faint" style="margin-bottom:12px;">It may seem easy to work here — it is not. The robotic manager watches the work, not the clock, and it records everything. Read this once; the record will always be in your hands.</p>
+          <div id="the-standard"></div>
+        </div>
+
+        <!-- ACADEMY UPTIME — the OS-outage monitoring board -->
+        <div class="card" id="os-uptime-card" style="margin-top:18px;">
+          <div class="eyebrow" style="margin-bottom:6px;">Academy uptime · the power monitor</div>
+          <p class="small faint" style="margin-bottom:12px;">Every panel that watches the Academy feeds this board — one row per outage, however many eyes were on it. The lights-off state, the lights-on moment, and exactly how long the dark lasted.</p>
+          <div id="os-uptime"></div>
+        </div>
+
+        <!-- ADMIN: add staff -->
+        <div class="card" id="admin-invite" hidden style="margin-top:18px;">
+          <div class="eyebrow" style="margin-bottom:10px;">Hire &amp; invite (admin)</div>
+          <p class="small" style="margin-bottom:16px;">Create the staff account — the new team member receives a one-time invite and sets their own credential. Never self-service, exactly like a real hire.</p>
+          <div class="grid2">
+            <div class="field"><label>Full name</label><input class="input" id="h-name" placeholder="e.g. Sarah Mokoena"></div>
+            <div class="field"><label>Work email</label><input class="input" id="h-email" type="email" placeholder="sarah@realityfx.co.za"></div>
+          </div>
+          <div class="field" style="max-width:260px;">
+            <label>Role</label>
+            <select class="select" id="h-role">
+              <option value="reception">Reception</option>
+              <option value="approver">Approver / Moderator</option>
+              <option value="finance">Finance</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <button class="btn btn-gold" id="btn-hire"><span data-icon="userCheck"></span> Create account &amp; send invite</button>
+          <div class="small" id="hire-result" style="margin-top:12px;"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="assets/icons.js?v=20260810-59"></script>
+<script src="js/db.js?v=20260810-59"></script>
+<script src="js/ui.js?v=20260810-59"></script>
+<script src="js/staff.js?v=20260810-59"></script>
+</body>
+</html>

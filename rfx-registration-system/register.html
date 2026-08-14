@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Registration — Reality FX</title>
+<link rel="icon" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/system.css?v=20260810-59">
+</head>
+<body>
+<div class="wrap">
+<div class="reg-shell" id="portal">
+
+  <header class="reg-head">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <img src="assets/logo.svg" alt="Reality FX" style="width:190px;">
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="demo-countdown" id="demo-countdown" hidden
+           title="Time left till your demo session is expired">
+        <span class="ic" data-icon="clock"></span>
+        <span class="dc-label">Demo session</span>
+        <span class="dc-time" id="demo-countdown-time">—</span>
+        <span class="life-bar" id="demo-countdown-bar" title="Tour life remaining — it drains as your 24 hours run out"><span class="life-bar-fill" style="--v:100%"></span></span>
+      </div>
+      <div class="secure"><span class="ic" data-icon="lock"></span> Secure registration link</div>
+    </div>
+  </header>
+
+  <div class="reg-body">
+
+    <!-- LINK ERROR -->
+    <div id="screen-link-error" class="reg-step" hidden>
+      <div class="card" style="text-align:center;padding:50px 34px;">
+        <div class="hero-ic" data-icon="lock" style="margin-bottom:14px;"></div>
+        <h2 class="serif" style="font-size:24px;margin-bottom:10px;">Registration link unavailable</h2>
+        <p class="sub" id="link-error-msg" style="margin:0 auto 22px;"></p>
+        <p class="small" style="color:var(--faint);">Need help? Contact Reality FX — realityfx20@gmail.com</p>
+        <a class="btn btn-ghost" href="index.html" style="margin-top:18px;">← Back to Reality FX</a>
+      </div>
+    </div>
+
+    <!-- WELCOME -->
+    <div id="screen-welcome" class="reg-step" hidden>
+      <div class="card card-gold" style="text-align:center;padding:46px 38px;">
+        <div class="hero-ic" data-icon="grad" style="margin-bottom:14px;"></div>
+        <div class="eyebrow" style="margin-bottom:10px;">Welcome to Reality FX</div>
+        <h2 class="display" style="font-size:30px;">You're one step from<br>your <span class="gold">student identity</span></h2>
+        <p class="sub" style="margin:14px auto 0;">This secure link belongs to your paid enrollment. Complete registration to establish your official Reality FX identity and gain access to RFX OS.</p>
+        <div class="founder-quote" id="wl-quote" style="margin:22px auto 0;max-width:420px;padding:16px 20px;border:1px solid rgba(212,175,55,0.35);border-radius:14px;background:linear-gradient(180deg,rgba(212,175,55,0.08),transparent);">
+          <div class="eyebrow muted" style="font-size:9px;margin-bottom:6px;">A word from the founder</div>
+          <div style="font-family:var(--font-serif);font-style:italic;font-size:15px;color:var(--gold-bright);line-height:1.5;">“<span id="wl-quote-text">—</span>”</div>
+        </div>
+        <div style="margin:26px auto 0;max-width:380px;text-align:left;">
+          <dl class="kv">
+            <dt>Student</dt><dd id="wl-name">—</dd>
+            <dt>Email</dt><dd id="wl-email">—</dd>
+            <dt>Course</dt><dd id="wl-course">—</dd>
+            <dt>Paid</dt><dd id="wl-price">—</dd>
+            <dt>Link expires</dt><dd id="wl-exp">—</dd>
+          </dl>
+        </div>
+        <button class="btn btn-gold" id="btn-begin" style="margin-top:26px;">Begin registration →</button>
+      </div>
+    </div>
+
+    <!-- FORM -->
+    <div id="screen-form" class="reg-step" hidden>
+      <div class="stepper" id="stepper"></div>
+      <div style="display:flex;align-items:baseline;gap:12px;margin:26px 0 4px;">
+        <h2 class="serif" id="step-title" style="font-size:25px;"></h2>
+        <span class="small faint" id="step-count"></span>
+      </div>
+      <p class="small" id="step-sub" style="margin-bottom:24px;"></p>
+
+      <!-- 1. personal -->
+      <section id="step-personal" class="reg-step" hidden>
+        <div class="card">
+          <div class="grid2">
+            <div class="field">
+              <label>First name <span class="req">*</span></label>
+              <input class="input" id="p-first" placeholder="e.g. Pedro">
+            </div>
+            <div class="field">
+              <label>Surname <span class="req">*</span></label>
+              <input class="input" id="p-surname" placeholder="e.g. Zulu — both names appear on your certificate">
+            </div>
+          </div>
+          <div class="field">
+            <label>Date of birth <span class="req">*</span></label>
+            <input class="input" id="p-dob" placeholder="Pick your date of birth" autocomplete="off">
+            <div class="small faint" style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+              <span style="font-size:10px;letter-spacing:.04em;text-transform:uppercase;">Quick pick:</span>
+              <button type="button" class="age-chip" onclick="RFX.pickAgeRange(16,17)">16–17</button>
+              <button type="button" class="age-chip" onclick="RFX.pickAgeRange(18,24)">18–24</button>
+              <button type="button" class="age-chip" onclick="RFX.pickAgeRange(25,34)">25–34</button>
+              <button type="button" class="age-chip" onclick="RFX.pickAgeRange(35,44)">35–44</button>
+              <button type="button" class="age-chip" onclick="RFX.pickAgeRange(45,80)">45+</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Country of residence <span class="req">*</span></label>
+            <select class="input" id="p-country" style="appearance:auto;cursor:pointer;padding-right:14px;">
+              <option value="">Select your country of residence…</option>
+            </select>
+            <div class="hint">Pick from the list — it keeps your identity, certificate and records consistent.</div>
+          </div>
+          <div class="field">
+            <label>Email (from your enrollment)</label>
+            <input class="input" id="p-email" readonly style="opacity:.7;">
+            <div class="hint">This is the email on your paid enrollment. It becomes your login for RFX OS.</div>
+          </div>
+        </div>
+        <div class="reg-nav"><span></span><button class="btn btn-gold" id="next-personal">Continue →</button></div>
+      </section>
+
+      <!-- 2. email verify -->
+      <section id="step-email" class="reg-step" hidden>
+        <div class="card" style="text-align:center;">
+          <div class="hero-ic" data-icon="mail" style="margin-bottom:10px;"></div>
+          <p class="sub" style="margin:0 auto 6px;">We emailed a 6-digit code to</p>
+          <p id="ev-email" class="gold serif" style="font-size:17px;font-weight:600;"></p>
+          <div class="code-row" style="justify-content:center;margin:22px 0;" id="ev-codes"></div>
+          <p class="small faint" id="ev-hint">In the demo, the code also lands in your Mailbox below.</p>
+          <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;flex-wrap:wrap;">
+            <a class="btn btn-gold btn-sm" id="ev-mailto" href="#" target="_blank"><span data-icon="mail"></span> Open your email app</a>
+            <button class="btn btn-dark btn-sm" id="ev-resend"><span data-icon="refresh"></span> Resend code</button>
+          </div>
+        </div>
+        <div class="reg-nav"><button class="btn btn-dark" id="back-email">← Back</button><button class="btn btn-gold" id="verify-email">Verify email</button></div>
+      </section>
+
+      <!-- 3. captcha -->
+      <section id="step-captcha" class="reg-step" hidden>
+        <div class="card">
+          <div class="eyebrow muted" style="margin-bottom:10px;">Human check</div>
+          <p class="small" style="margin-bottom:18px;">Type the characters shown below. This confirms a real person is registering.</p>
+          <div class="captcha-box"><canvas id="captcha-canvas"></canvas></div>
+          <div class="field">
+            <label>Enter the characters <span class="req">*</span></label>
+            <input class="input" id="captcha-input" maxlength="6" autocomplete="off" placeholder="Type what you see">
+            <div class="hint" style="cursor:pointer;" id="captcha-refresh">Can't read it? Generate a new one</div>
+          </div>
+        </div>
+        <div class="reg-nav"><button class="btn btn-dark" id="back-captcha">← Back</button><button class="btn btn-gold" id="verify-captcha">Continue →</button></div>
+      </section>
+
+      <!-- 4. identity -->
+      <section id="step-identity" class="reg-step" hidden>
+        <div class="card">
+          <div class="eyebrow muted" style="margin-bottom:10px;">Identity information</div>
+          <p class="small" style="margin-bottom:18px;">Reality FX's current registration requirements — used to verify who you are and to protect your account.</p>
+          <div class="grid2">
+            <div class="field">
+              <label>Phone number <span class="req">*</span></label>
+              <input class="input" id="i-phone" placeholder="+27 82 000 0000">
+            </div>
+            <div class="field" id="i-id-field">
+              <label>Government ID / passport <span class="req" id="i-id-req"></span></label>
+              <input class="input" id="i-id" placeholder="Not required by Reality FX">
+              <div class="hint" id="i-id-hint">Hidden by default — Reality FX does not collect government ID or passport numbers.</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Physical address <span class="req">*</span></label>
+            <input class="input" id="i-address" placeholder="Street, city, province, postal code">
+          </div>
+          <div class="field">
+            <label>Identity selfie <span class="req">*</span></label>
+            <div class="dropzone" id="dz">
+              <div id="dz-empty"><div class="hero-ic" data-icon="camera" style="margin-bottom:8px;"></div>Add a clear selfie<br><span class="small faint">Stored securely and used only for identity verification</span></div>
+            </div>
+            <input type="file" id="dz-input" accept="image/*" hidden>
+            <input type="file" id="dz-camera" accept="image/*" capture="user" hidden>
+            <div class="selfie-choices" id="dz-choices">
+              <button type="button" class="btn btn-gold btn-sm" id="dz-phone"><span data-icon="smartphone"></span> Take on my phone</button>
+              <button type="button" class="btn btn-gold btn-sm" id="dz-webcam"><span data-icon="camera"></span> Use my webcam</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="dz-gallery"><span data-icon="image"></span> Upload from files</button>
+            </div>
+            <div class="hint">Phone camera · laptop webcam · or an existing photo — whichever is easiest. Your face, well lit, nothing else in frame.</div>
+            <div class="pose-guide">
+              <div class="small faint" style="margin-bottom:8px;">How to take it — 30 seconds:</div>
+              <div class="pose-grid">
+                <div class="pose-card ok">
+                  <svg viewBox="0 0 100 100" fill="none" aria-hidden="true">
+                    <rect width="100" height="100" rx="14" fill="#161514"/>
+                    <g stroke="#d4af37" stroke-width="2" stroke-linecap="round" opacity="0.6">
+                      <path d="M16 22 L24 30"/><path d="M10 36 L20 40"/><path d="M30 12 L34 22"/><path d="M22 12 L24 20"/>
+                    </g>
+                    <path d="M22 88 C22 74 78 74 78 88" stroke="#a7a7a7" stroke-width="4" stroke-linecap="round" opacity="0.35"/>
+                    <circle cx="50" cy="48" r="22" stroke="#d4af37" stroke-width="2.5"/>
+                    <path d="M28 44 C28 26 72 26 72 44" stroke="#d4af37" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="43" cy="50" r="2.2" fill="#d4af37"/>
+                    <circle cx="57" cy="50" r="2.2" fill="#d4af37"/>
+                    <path d="M43 60 C47 64 53 64 57 60" stroke="#d4af37" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="84" cy="84" r="10" fill="#1c2b22"/>
+                    <path d="M79 84 L83 88 L90 79" stroke="#7ee2a4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <span class="pose-lab">Face centered · good light · camera at eye level</span>
+                </div>
+                <div class="pose-card bad">
+                  <svg viewBox="0 0 100 100" fill="none" aria-hidden="true">
+                    <rect width="100" height="100" rx="14" fill="#10100f"/>
+                    <path d="M74 18 A10 10 0 1 0 88 30 A8 8 0 0 1 74 18" fill="#6f6f6b" opacity="0.5"/>
+                    <circle cx="50" cy="48" r="22" stroke="#4a4a46" stroke-width="2.5"/>
+                    <path d="M28 44 C28 26 72 26 72 44" stroke="#4a4a46" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="43" cy="50" r="2.2" fill="#4a4a46"/>
+                    <circle cx="57" cy="50" r="2.2" fill="#4a4a46"/>
+                    <path d="M43 60 C47 64 53 64 57 60" stroke="#4a4a46" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="84" cy="84" r="10" fill="#2b1c1a"/>
+                    <path d="M79 79 L89 89 M89 79 L79 89" stroke="#f0a89c" stroke-width="2.5" stroke-linecap="round"/>
+                  </svg>
+                  <span class="pose-lab">Too dark — your face can't be clearly seen</span>
+                </div>
+                <div class="pose-card bad">
+                  <svg viewBox="0 0 100 100" fill="none" aria-hidden="true">
+                    <rect width="100" height="100" rx="14" fill="#161514"/>
+                    <path d="M16 30 L24 30 M16 26 L16 34 M20 30 L20 22" stroke="#6f6f6b" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+                    <path d="M84 30 L76 30 M84 26 L84 34 M80 30 L80 22" stroke="#6f6f6b" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+                    <circle cx="50" cy="48" r="9" stroke="#a7a7a7" stroke-width="2"/>
+                    <circle cx="47" cy="47.5" r="1.2" fill="#a7a7a7"/>
+                    <circle cx="53" cy="47.5" r="1.2" fill="#a7a7a7"/>
+                    <path d="M47 52 C48.5 53.5 51.5 53.5 53 52" stroke="#a7a7a7" stroke-width="1.2" stroke-linecap="round"/>
+                    <circle cx="84" cy="84" r="10" fill="#2b1c1a"/>
+                    <path d="M79 79 L89 89 M89 79 L79 89" stroke="#f0a89c" stroke-width="2.5" stroke-linecap="round"/>
+                  </svg>
+                  <span class="pose-lab">Too far away — fill the frame with your face</span>
+                </div>
+                <div class="pose-card bad">
+                  <svg viewBox="0 0 100 100" fill="none" aria-hidden="true">
+                    <rect width="100" height="100" rx="14" fill="#161514"/>
+                    <circle cx="50" cy="48" r="22" stroke="#a7a7a7" stroke-width="2.5"/>
+                    <path d="M28 44 C28 26 72 26 72 44" stroke="#a7a7a7" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M36 48 C40 44 46 44 50 48 C54 44 60 44 64 48" stroke="#6f6f6b" stroke-width="2"/>
+                    <path d="M40 42 L48 50 M52 42 L60 50" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" opacity="0.45"/>
+                    <circle cx="84" cy="84" r="10" fill="#2b1c1a"/>
+                    <path d="M79 79 L89 89 M89 79 L79 89" stroke="#f0a89c" stroke-width="2.5" stroke-linecap="round"/>
+                  </svg>
+                  <span class="pose-lab">No glare or sunglasses — face fully visible</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="reg-nav"><button class="btn btn-dark" id="back-identity">← Back</button><button class="btn btn-gold" id="next-identity">Continue →</button></div>
+      </section>
+
+      <!-- 5. agreements -->
+      <section id="step-agreements" class="reg-step" hidden>
+        <div class="card">
+          <div class="eyebrow muted" style="margin-bottom:10px;">Agreements</div>
+          <p class="small" style="margin-bottom:18px;">Please read and accept each agreement. The exact version and time of your acceptance are recorded.</p>
+          <div id="agreements-list"></div>
+        </div>
+        <div class="reg-nav"><button class="btn btn-dark" id="back-agreements">← Back</button><button class="btn btn-gold" id="accept-agreements">Accept & continue →</button></div>
+      </section>
+
+      <!-- 6. review -->
+      <section id="step-review" class="reg-step" hidden>
+        <div class="card">
+          <div class="eyebrow muted" style="margin-bottom:12px;">Review & submit</div>
+          <dl class="kv" id="review-list"></dl>
+          <p class="small" style="color:var(--faint);margin-top:18px;">By submitting, you confirm the information above is true and accurate. False information may lead to rejection.</p>
+        </div>
+        <div class="reg-nav"><button class="btn btn-dark" id="back-review">← Back</button><button class="btn btn-gold" id="submit-reg">✓ Submit registration</button></div>
+      </section>
+    </div>
+
+    <!-- SUBMITTED (under review) -->
+    <div id="screen-submitted" class="reg-step" hidden>
+      <div class="card card-gold" style="text-align:center;padding:50px 40px;">
+        <div class="big-check" style="width:72px;height:72px;"><span class="hero-ic" data-icon="clock"></span></div>
+        <div class="eyebrow" style="margin-bottom:8px;">Registration submitted</div>
+        <h2 class="display" style="font-size:28px;">Under <span class="gold">review</span></h2>
+        <p class="sub" style="margin:14px auto 0;">Reality FX verifies every registration against the paid enrollment before creating your student identity.</p>
+        <div id="sla-box" style="margin:18px auto 0;max-width:420px;"></div>
+        <div style="margin:16px 0 0;"><span class="pill" style="font-size:12px;"><span class="dot"></span> DEMO PROFILE <span style="color:var(--faint);">· live access unlocks on approval</span></span></div>
+        <p class="small" id="sub-reapply" style="margin-top:14px;color:var(--info);" hidden></p>
+        <p class="small" style="margin-top:18px;color:var(--faint);">Return to this link later to see your status — or watch for your welcome email.</p>
+        <a class="btn btn-ghost" id="check-status" style="margin-top:22px;"><span data-icon="refresh"></span> Check status</a>
+      </div>
+    </div>
+
+    <!-- APPROVED -->
+    <div id="screen-approved" class="reg-step" hidden>
+      <div class="card card-gold" style="text-align:center;padding:52px 44px;">
+        <div class="big-check"><svg viewBox="0 0 52 52" fill="none"><circle cx="26" cy="26" r="24" stroke="#241a05" stroke-width="3" opacity="0.15"/><path d="M14 27l8 8 16-17" stroke="#241a05" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="eyebrow" style="margin-bottom:6px;">Registration complete</div>
+        <h2 class="display" style="font-size:30px;">REGISTRATION <span class="gold">COMPLETE</span></h2>
+        <div style="margin:14px 0;"><span class="pill ok" style="font-size:12px;">✓ Verified</span>&nbsp; <span class="pill gold" style="font-size:12px;"><span class="dot ok pulse"></span> LIVE PROFILE</span></div>
+        <div class="student-id-chip" id="ap-id">RFX-10482</div>
+        <div style="color:var(--muted);font-size:12px;letter-spacing:0.2em;text-transform:uppercase;">Your Student ID</div>
+        <div class="code-reveal" id="ap-code-wrap">
+          <span id="ap-code">RFX-••••</span>
+          <button id="ap-reveal" title="Reveal student code"><span data-icon="eye"></span></button>
+        </div>
+        <div style="color:var(--muted);font-size:12px;letter-spacing:0.2em;text-transform:uppercase;">Student code</div>
+        <p class="quote" style="margin:22px 0 6px;">“Your Reality FX identity has been established.<br>Your RFX OS access is ready.”</p>
+        <div id="ap-lock-msg" hidden style="margin-top:20px;"></div>
+        <a class="btn btn-gold" id="ap-enter" href="http://127.0.0.1:49270/os/index.html" target="_blank" style="margin-top:20px;font-size:15px;padding:15px 34px;">Enter the Academy →</a>
+        <a class="btn btn-ghost btn-sm" href="member.html" style="margin-top:12px;"><span data-icon="user"></span> My RFX account</a>
+        <p class="small faint" style="margin-top:16px;">Keep this page safe — your Student ID is your permanent identity.</p>
+      </div>
+    </div>
+
+    <!-- REJECTED -->
+    <div id="screen-rejected" class="reg-step" hidden>
+      <div class="card" style="border-color:rgba(224,96,79,0.4);text-align:center;padding:50px 40px;">
+        <div class="hero-ic" data-icon="x" style="margin-bottom:14px;color:#f0a89c;"></div>
+        <h2 class="serif" style="font-size:24px;margin-bottom:10px;">Registration not approved</h2>
+        <p class="sub" id="rej-msg" style="margin:0 auto;"></p>
+
+        <div id="rej-reapply" hidden style="margin-top:30px;text-align:left;">
+          <div class="card card-gold" style="padding:24px;">
+            <div class="eyebrow" style="margin-bottom:8px;">Good news — you can re-apply</div>
+            <p class="small" id="rej-reapply-msg"></p>
+            <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+              <button class="btn btn-gold" id="btn-reapply"><span data-icon="refresh"></span> Fix &amp; re-apply</button>
+              <button class="btn btn-ghost" id="btn-resolve">Or resolve my payment instead</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="rej-choice" hidden style="margin-top:30px;text-align:left;">
+          <div class="card card-gold" style="padding:24px;">
+            <div class="eyebrow" style="margin-bottom:10px;">Your options</div>
+            <p class="small" style="margin-bottom:16px;">Your payment of <b style="color:var(--text);" id="rej-amount"></b> is safe with Reality FX. Choose how you would like it returned — this is your decision, and you can change it until we process it.</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button class="btn btn-gold" id="choose-credit" style="flex:1;min-width:200px;"><span data-icon="card"></span> Credit my RFX account <span class="small" style="display:block;font-weight:400;opacity:.85;margin-left:24px;">Instant · zero fees · usable for any course, seat transfer or mentorship</span></button>
+              <button class="btn btn-ghost" id="choose-refund" style="flex:1;min-width:200px;"><span data-icon="send"></span> Request a cash refund <span class="small" style="display:block;font-weight:400;opacity:.85;margin-left:24px;">Paid via PayPal in our monthly batch · international &amp; fast · fees may apply</span></button>
+            </div>
+            <div class="small" id="refund-statement" hidden style="margin-top:14px;padding:12px 14px;border:1px solid rgba(224,96,79,0.45);border-radius:10px;background:var(--danger-dim);color:#f0a89c;line-height:1.6;"></div>
+            <p class="small faint" style="margin-top:12px;">Per the Refund &amp; Credit Policy (v2.1) you accepted at registration.</p>
+          </div>
+        </div>
+
+        <div id="rej-status" hidden style="margin-top:30px;"></div>
+
+        <p class="small" style="margin-top:18px;color:var(--faint);">Questions? Contact Reality FX — realityfx20@gmail.com</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script src="assets/icons.js?v=20260810-59"></script>
+<script src="js/db.js?v=20260810-59"></script>
+<script src="js/ui.js?v=20260810-59"></script>
+<script src="js/register.js?v=20260810-59"></script>
+</body>
+</html>

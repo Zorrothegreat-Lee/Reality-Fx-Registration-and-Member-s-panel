@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 64" width="340" height="64">
+  <defs>
+    <linearGradient id="goldg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F0D98C"/>
+      <stop offset="0.5" stop-color="#D4AF37"/>
+      <stop offset="1" stop-color="#A8842A"/>
+    </linearGradient>
+    <filter id="crownGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="1.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect x="4" y="8" width="44" height="48" rx="10" fill="#0E0E0C" stroke="url(#goldg)" stroke-width="1.6"/>
+  <!-- the crown is Zorro's exact OS mark: M2 18h20M4 17l-1-9 6 4 3-6 3 6 6-4-1 9H4z -->
+  <g transform="translate(8.5,13) scale(1.5)" fill="none" stroke="url(#goldg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" filter="url(#crownGlow)">
+    <path d="M2 18h20M4 17l-1-9 6 4 3-6 3 6 6-4-1 9H4z"/>
+  </g>
+  <text x="64" y="33" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="#FFFFFF" letter-spacing="0.5">Reality FX</text>
+  <text x="236" y="29" font-family="Georgia, serif" font-size="14.5" font-style="italic" font-weight="600" fill="#D4AF37">Registrar</text>
+  <text x="64" y="51" font-family="'Inter', Arial, sans-serif" font-size="9.5" fill="#A7A7A7" letter-spacing="2.2">ENROLLMENT · REGISTRATION · IDENTITY</text>
+</svg>

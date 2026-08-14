@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mailbox — Reality FX Enrollment</title>
+<link rel="icon" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/system.css?v=20260810-59">
+</head>
+<body>
+<div class="wrap">
+  <div class="shell">
+    <aside class="sidebar">
+      <a href="index.html"><img src="assets/logo.svg" alt="Reality FX Registrar" class="brand-logo"></a>
+      <div class="brand-tag">The Trading Academy</div>
+      <nav class="nav">
+        <a class="nav-item" href="admin.html"><span class="ni-ic" data-icon="shield"></span>Staff Console</a>
+        <a class="nav-item" href="srm.html"><span class="ni-ic" data-icon="users"></span>Students (SRM)</a>
+        <a class="nav-item active" href="mailbox.html"><span class="ni-ic" data-icon="mail"></span>Mailbox <span class="pill soon" id="mail-count" style="margin-left:auto;">0</span></a>
+        <a class="nav-item" href="wallet.html"><span class="ni-ic" data-icon="card"></span>Credit &amp; Refunds <span class="pill warn" id="payout-count" style="margin-left:auto;">0</span></a>
+        <a class="nav-item" href="index.html"><span class="ni-ic" data-icon="columns"></span>Reception</a>
+        <a class="nav-item" href="member.html"><span class="ni-ic" data-icon="user"></span>Members</a>
+        <div style="height:14px;"></div>
+        <a class="nav-item nav-academy" href="http://127.0.0.1:49270/os/index.html" target="_blank" title="The Academy — where approved students learn"><span class="ni-ic" data-icon="grad"></span><span class="nav-label">RFX OS Academy</span></a>
+      </nav>
+      <div class="nav-foot">System A · RFX Registrar<br>Simulated outbound mail</div>
+    </aside>
+
+    <main class="main">
+      <div class="page-head head-row">
+        <div>
+          <div class="eyebrow">RFX Enrollment · Outbound mail</div>
+          <h1 class="display">Mailbox <span class="gold">(simulated)</span></h1>
+          <p class="sub">Everything the Registrar would email your students — invoices, secure registration links and verification codes. A real provider (Resend / SendGrid / SES) plugs in behind this screen.</p>
+        </div>
+        <button class="btn btn-dark" id="btn-clear"><span data-icon="trash"></span> Clear mailbox</button>
+      </div>
+
+      <div class="card">
+        <div class="mail-layout">
+          <div class="mail-list" id="mail-list"></div>
+          <div class="mail-body" id="mail-body"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="assets/icons.js?v=20260810-59"></script>
+<script src="js/db.js?v=20260810-59"></script>
+<script src="js/ui.js?v=20260810-59"></script>
+<script src="js/mailbox.js?v=20260810-59"></script>
+</body>
+</html>

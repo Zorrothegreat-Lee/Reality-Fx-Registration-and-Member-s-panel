@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#080808"/>
+  <rect x="1.5" y="1.5" width="61" height="61" rx="12.5" fill="none" stroke="#D4AF37" stroke-opacity="0.55" stroke-width="1.5"/>
+  <!-- the exact OS favicon crown: M4 16.5 L3 7 L9 11 L12 5 L15 11 L21 7 L20 16.5 Z + band -->
+  <g transform="translate(6,10.5) scale(2.6)">
+    <path d="M4 16.5 L3 7 L9 11 L12 5 L15 11 L21 7 L20 16.5 Z" fill="#D4AF37"/>
+    <rect x="2" y="16.5" width="20" height="2" rx="1" fill="#D4AF37"/>
+  </g>
+</svg>

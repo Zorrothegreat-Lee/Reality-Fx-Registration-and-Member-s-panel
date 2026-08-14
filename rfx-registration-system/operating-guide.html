@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Reality FX Operates — The Complete Guide</title>
+<meta name="description" content="The complete walkthrough of how Reality FX runs: Front Desk, Student Portal, RFX OS Academy, the registration gate and the security machine behind it all.">
+<link rel="icon" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080808;
+    --panel: #0d0d0d;
+    --panel2: #121212;
+    --border: rgba(255,255,255,0.08);
+    --gold: #d4af37;
+    --gold-bright: #f0d98c;
+    --gold-deep: #8f6f1f;
+    --text: #ffffff;
+    --muted: #a7a7a7;
+    --faint: #6f6f6f;
+    --ok: #7ee2a4;
+    --warn: #f0a89c;
+    --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    --italic: 'Cormorant Garamond', Georgia, serif;
+    --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  ::selection { background: rgba(212,175,55,0.35); color: #fff; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 28px; }
+
+  /* ---------- top ribbon ---------- */
+  .ribbon {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    background: rgba(8,8,8,0.85); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .ribbon-in { max-width: 1080px; margin: 0 auto; padding: 12px 28px; display: flex; align-items: center; gap: 14px; }
+  .ribbon .mark { color: var(--gold); font-family: var(--serif); font-weight: 700; font-size: 17px; letter-spacing: 0.5px; }
+  .ribbon .mark small { display: block; font-family: var(--sans); font-size: 8.5px; letter-spacing: 3px; color: var(--faint); font-weight: 500; }
+  .ribbon .crumbs { margin-left: auto; display: flex; gap: 18px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .ribbon .crumbs a { color: inherit; text-decoration: none; transition: color 0.25s; }
+  .ribbon .crumbs a:hover { color: var(--gold-bright); }
+  @media (max-width: 720px) { .ribbon .crumbs { display: none; } }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 150px 0 60px; text-align: center; position: relative; }
+  .hero::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(600px 300px at 50% -80px, rgba(212,175,55,0.13), transparent 70%);
+  }
+  .eyebrow { display: inline-block; font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 18px; }
+  h1.display { font-family: var(--serif); font-size: clamp(34px, 5.2vw, 56px); font-weight: 700; line-height: 1.12; margin-bottom: 18px; }
+  h1.display .gold { color: var(--gold-bright); }
+  .hero p.lead { color: var(--muted); font-size: 17px; max-width: 680px; margin: 0 auto 8px; }
+  .hero .quote {
+    font-family: var(--italic); font-style: italic; font-size: 19px; color: var(--gold-bright);
+    max-width: 640px; margin: 26px auto 0; line-height: 1.5;
+  }
+
+  /* ---------- the chain ---------- */
+  .chain-wrap { margin: 54px auto 0; max-width: 920px; }
+  .chain {
+    display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 12px; align-items: center;
+  }
+  @media (max-width: 760px) { .chain { grid-template-columns: 1fr; } .chain .chain-arrow { transform: rotate(90deg); } }
+  .chain-node {
+    background: linear-gradient(180deg, var(--panel2), var(--panel));
+    border: 1px solid var(--border); border-radius: 16px; padding: 26px 18px;
+    text-align: center; transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), border-color 0.3s, box-shadow 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .chain-node:hover { transform: translateY(-4px); border-color: rgba(212,175,55,0.5); box-shadow: 0 14px 40px -18px rgba(212,175,55,0.35); }
+  .chain-node .node-ic { width: 52px; height: 52px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; color: var(--gold-bright); }
+  .chain-node .node-ic svg { width: 52px; height: 52px; }
+  .chain-node .node-tag { font-size: 9.5px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--faint); margin-bottom: 6px; }
+  .chain-node h3 { font-family: var(--serif); font-size: 19px; color: var(--text); margin-bottom: 6px; }
+  .chain-node p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .chain-arrow { color: var(--gold); opacity: 0.85; display: flex; align-items: center; justify-content: center; }
+  .chain-arrow svg { width: 30px; height: 30px; }
+  .chain-arrow small { position: absolute; display: none; }
+
+  .chain-caption { margin-top: 22px; font-size: 12px; color: var(--faint); text-align: center; letter-spacing: 0.06em; }
+
+  /* ---------- sections ---------- */
+  section { padding: 72px 0; }
+  .sec-head { max-width: 760px; margin-bottom: 40px; }
+  .sec-head .num { color: var(--gold); font-family: var(--serif); font-size: 15px; letter-spacing: 0.2em; margin-bottom: 8px; }
+  .sec-head h2 { font-family: var(--serif); font-size: clamp(26px, 3.6vw, 38px); line-height: 1.2; margin-bottom: 14px; }
+  .sec-head p { color: var(--muted); font-size: 15.5px; }
+  .rule { height: 1px; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.4), transparent); margin: 0 0 44px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+  .card {
+    background: linear-gradient(180deg, var(--panel2), var(--panel));
+    border: 1px solid var(--border); border-radius: 16px; padding: 26px;
+  }
+  .card.gold { border-color: rgba(212,175,55,0.45); }
+  .card .ic { width: 40px; height: 40px; color: var(--gold-bright); margin-bottom: 14px; display: flex; }
+  .card .ic svg { width: 40px; height: 40px; }
+  .card h3 { font-family: var(--serif); font-size: 18px; margin-bottom: 10px; }
+  .card p { color: var(--muted); font-size: 13.5px; }
+  .card p b { color: var(--text); font-weight: 600; }
+  .card p .g { color: var(--gold-bright); font-weight: 600; }
+
+  /* ---------- the gate (steps) ---------- */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+  .step {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px 18px;
+    position: relative; transition: border-color 0.25s, transform 0.25s;
+  }
+  .step:hover { border-color: rgba(212,175,55,0.4); transform: translateY(-3px); }
+  .step .s-num {
+    width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: rgba(212,175,55,0.14); border: 1px solid rgba(212,175,55,0.4); color: var(--gold-bright);
+    font-size: 12.5px; font-weight: 700; margin-bottom: 12px;
+  }
+  .step h4 { font-size: 13.5px; margin-bottom: 6px; color: var(--text); }
+  .step p { font-size: 11.5px; color: var(--muted); line-height: 1.55; }
+
+  .gate-note {
+    margin-top: 22px; padding: 18px 22px; border: 1px solid rgba(212,175,55,0.35); border-radius: 14px;
+    background: linear-gradient(180deg, rgba(212,175,55,0.08), transparent); font-size: 13px; color: var(--muted);
+  }
+  .gate-note b { color: var(--gold-bright); }
+
+  /* ---------- the machine ---------- */
+  .machinery {
+    border: 1px solid rgba(212,175,55,0.4); border-radius: 20px;
+    background: linear-gradient(180deg, #0f0f0f, #0a0a0a); padding: 36px;
+    margin-top: 44px; position: relative; overflow: hidden;
+  }
+  .machinery::before { content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(500px 220px at 20% 0%, rgba(212,175,55,0.08), transparent 70%); }
+  .machinery .m-title { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .machinery .m-title .ic { color: var(--gold-bright); width: 30px; height: 30px; }
+  .machinery .m-title .ic svg { width: 30px; height: 30px; }
+  .machinery h3 { font-family: var(--serif); font-size: 22px; letter-spacing: 0.04em; }
+  .machinery .m-sub { color: var(--faint); font-size: 12.5px; margin-bottom: 26px; }
+  .machine-rings { display: flex; gap: 34px; align-items: center; flex-wrap: wrap; margin-bottom: 26px; }
+  .m-ring { text-align: center; position: relative; }
+  .m-ring svg { width: 88px; height: 88px; transform: rotate(-90deg); }
+  .m-ring .tr-track { fill: none; stroke: rgba(255,255,255,0.07); stroke-width: 7; }
+  .m-ring .tr-fill { fill: none; stroke-width: 7; stroke-linecap: round; stroke: url(#ringGrad);
+    stroke-dasharray: 226; stroke-dashoffset: 226; animation: drawRing 1.1s cubic-bezier(0.22,1,0.36,1) 0.3s forwards;
+    /* the same soft arc-hugging glow the member panel uses — an SVG blur of
+       the drawn stroke, never a box */
+    filter: url(#ringGlow); }
+  .m-ring .m-pct { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .m-ring .m-pct b { font-family: var(--serif); font-size: 19px; color: var(--gold-bright); }
+  .m-ring .m-pct span { font-size: 7.5px; letter-spacing: 1.5px; color: var(--faint); text-transform: uppercase; }
+  @keyframes drawRing { to { stroke-dashoffset: var(--off, 0); } }
+  .machine-stats { display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; }
+  .machine-stats .row { display: flex; align-items: baseline; gap: 10px; }
+  .machine-stats .row b { color: var(--gold-bright); font-family: var(--mono, ui-monospace, 'Cascadia Mono', Consolas, monospace); font-size: 13px; }
+  .machine-stats .row span { color: var(--muted); }
+  .machine-journey { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 18px;
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .machine-journey .jp { display: inline-flex; align-items: center; gap: 7px; color: var(--ok); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+  .machine-journey .jp svg { width: 13px; height: 13px; }
+  .machine-journey .jsep { color: rgba(255,255,255,0.25); }
+  .m-foot { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px; font-size: 12px; color: var(--faint); }
+  .m-foot b { color: var(--gold-bright); font-weight: 600; }
+
+
+  /* ---------- staff role ---------- */
+  .role-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+  .role-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 22px;
+    transition: border-color 0.25s, transform 0.25s;
+  }
+  .role-card:hover { border-color: rgba(212,175,55,0.4); transform: translateY(-3px); }
+  .role-card .r-ic { color: var(--gold-bright); margin-bottom: 12px; width: 28px; height: 28px; }
+  .role-card .r-ic svg { width: 28px; height: 28px; }
+  .role-card h4 { font-size: 14px; margin-bottom: 8px; }
+  .role-card p { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .role-card p b { color: var(--text); }
+  .role-card .tag { display: inline-block; margin-top: 12px; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 99px; border: 1px solid rgba(212,175,55,0.4); color: var(--gold-bright); }
+
+  /* ---------- longevity ---------- */
+  .longevity { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: center; }
+  @media (max-width: 860px) { .longevity { grid-template-columns: 1fr; } }
+  .longevity .l-line { font-family: var(--serif); font-size: clamp(24px, 3.2vw, 34px); line-height: 1.3; margin-bottom: 18px; }
+  .longevity .l-line .gold { color: var(--gold-bright); }
+  .longevity p { color: var(--muted); font-size: 14.5px; margin-bottom: 14px; }
+  .founder-note {
+    border: 1px solid rgba(212,175,55,0.4); border-radius: 16px; padding: 26px;
+    background: linear-gradient(180deg, rgba(212,175,55,0.09), transparent); text-align: center;
+  }
+  .founder-note .f-quote { font-family: var(--italic); font-style: italic; font-size: 18px; color: var(--gold-bright); margin-bottom: 10px; }
+  .founder-note .f-sig { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--faint); }
+
+  /* ---------- footer ---------- */
+  footer { border-top: 1px solid var(--border); padding: 44px 0 60px; text-align: center; }
+  footer .f-mark { font-family: var(--serif); color: var(--gold); font-size: 20px; letter-spacing: 1px; margin-bottom: 8px; }
+  footer p { color: var(--faint); font-size: 12px; line-height: 1.8; }
+  footer .chain-mini { margin-top: 18px; color: var(--muted); font-size: 12px; letter-spacing: 0.14em; }
+  footer .chain-mini .sep { color: var(--gold); margin: 0 8px; }
+
+  .print-btn {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 30px;
+    padding: 11px 22px; border-radius: 99px; border: 1px solid rgba(212,175,55,0.5);
+    background: transparent; color: var(--gold-bright); font-family: var(--sans); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.25s;
+  }
+  .print-btn:hover { background: rgba(212,175,55,0.12); }
+  .print-btn svg { width: 15px; height: 15px; }
+
+  /* reveal on scroll */
+  .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  @media print { .ribbon, .print-btn, .reveal { opacity: 1 !important; transform: none !important; } body { background: #fff; color: #111; } }
+</style>
+<noscript>
+  <!-- Without JS the reveal-on-scroll would hide the whole document — never let
+       the guide be blank. This guard also covers offline/desktop viewing. -->
+  <style>.reveal { opacity: 1 !important; transform: none !important; }</style>
+</noscript>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8f6f1f"/><stop offset="55%" stop-color="#d4af37"/><stop offset="100%" stop-color="#f0d98c"/>
+    </linearGradient>
+    <filter id="ringGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="2.6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+</svg>
+
+<div class="ribbon">
+  <div class="ribbon-in">
+    <div class="mark">REALITY FX<small>THE TRADING ACADEMY</small></div>
+    <div class="crumbs">
+      <a href="#map">Map</a>
+      <a href="#desk">Front Desk</a>
+      <a href="#gate">The Gate</a>
+      <a href="#portal">Student Portal</a>
+      <a href="#os">RFX OS</a>
+      <a href="#machine">Security</a>
+      <a href="#staff">Your Role</a>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ HERO ============ -->
+  <div class="hero">
+    <div class="eyebrow">Reality FX · The complete operating guide</div>
+    <h1 class="display">How Reality FX <span class="gold">operates</span></h1>
+    <p class="lead">Every student, every rand, every lesson — from the first click on the website to the last candle on a chart. This is the whole machine, explained honestly, for everyone who works it.</p>
+    <p class="quote">Welcome, <span class="gold">trader</span> — your journey awaits. This is the Reality FX Ecosystem, explained honestly.</p>
+
+    <!-- the chain (always visible — it is part of the hero) -->
+    <div class="chain-wrap">
+      <div class="chain">
+        <div class="chain-node">
+          <div class="node-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+              <path d="M7 9.5l3 2.5-3 2.5"/><path d="M13 13.5h4"/>
+            </svg>
+          </div>
+          <div class="node-tag">Step 1</div>
+          <h3>The Front Desk</h3>
+          <p>The website. What the world sees — courses, prices, enrolment. The front of the business.</p>
+        </div>
+        <div class="chain-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+        <div class="chain-node">
+          <div class="node-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/>
+            </svg>
+          </div>
+          <div class="node-tag">Step 2</div>
+          <h3>The Student Portal</h3>
+          <p>The campus office. Identity, wallet, store, events, referrals — everything student-related lives here.</p>
+        </div>
+        <div class="chain-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
+        <div class="chain-node">
+          <div class="node-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12.5v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/><line x1="22" y1="10" x2="22" y2="15.5"/>
+            </svg>
+          </div>
+          <div class="node-tag">Step 3</div>
+          <h3>RFX OS Academy</h3>
+          <p>Where the school lives. Approved students learn here — with some of the best learning software there is.</p>
+        </div>
+      </div>
+      <div class="chain-caption">FRONT DESK &nbsp;🖥&nbsp; → &nbsp;STUDENT PORTAL &nbsp;🧳&nbsp; → &nbsp;RFX OS &nbsp;👨🏾‍🎓</div>
+    </div>
+  </div>
+
+
+  <!-- ============ SECTION 1 : THE FRONT DESK ============ -->
+  <section id="desk" class="reveal">
+    <div class="sec-head">
+      <div class="num">01</div>
+      <h2>The Front Desk — where it all begins</h2>
+      <p>The Front Desk is the main front of the business — the first thing anyone sees when they look up Reality FX. It is not just a brochure; it is where the journey is <b>started</b>.</p>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+        <h3>What the Front Desk does</h3>
+        <p>It presents the Academy — the courses, the prices, the promise — and lets someone <b>enrol</b>. The moment a course is paid for and the payment is <b>approved</b> (for example through PayPal), the system takes over automatically. It creates the student's enrolment record, generates an official invoice, and emails it.</p>
+      </div>
+      <div class="card gold">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12.5v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/><line x1="22" y1="10" x2="22" y2="15.5"/></svg></div>
+        <h3>Right after the purchase</h3>
+        <p>The new student immediately receives two branded emails: the <b>invoice</b> confirming their purchase and ownership, and a <b>secure registration link</b> — a unique, time-limited link that carries them into the next room: the gate that leads to the Student Portal.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 2 : THE GATE ============ -->
+  <section id="gate" class="reveal">
+    <div class="rule"></div>
+    <div class="sec-head">
+      <div class="num">02</div>
+      <h2>The Gate — nobody walks in unregistered</h2>
+      <p>Buying a course is <b>not</b> the same as becoming a student. Between the Front Desk and the Portal stands a registration gate — deliberately, so we know every single person before they touch Academy material.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="s-num">1</div><h4>Secure link</h4><p>The registration email's link is unique, single-use and time-limited. An expired or used link is refused and a fresh one is issued.</p></div>
+      <div class="step"><div class="s-num">2</div><h4>Identity</h4><p>Name, surname, email, country, phone, address, date of birth — and a verification selfie, captured honestly from camera, mobile or files.</p></div>
+      <div class="step"><div class="s-num">3</div><h4>Human check</h4><p>Email verification with a 6-digit code, plus CAPTCHA. A machine confirms the basics — a person stays part of the review.</p></div>
+      <div class="step"><div class="s-num">4</div><h4>Agreements</h4><p>The exact version of the Terms, Conditions and Fair Usage Policy is recorded, with the exact time of acceptance.</p></div>
+      <div class="step"><div class="s-num">5</div><h4>Approval</h4><p>The system verifies the registration is tied to a genuine paid enrolment. Staff approve — then a Student ID and Student Code are created.</p></div>
+      <div class="step"><div class="s-num">6</div><h4>Handshake</h4><p>The approved identity is handed to RFX OS. RFX OS confirms receipt — idempotently, so a network hiccup never creates two identities for one student.</p></div>
+    </div>
+    <div class="gate-note">
+      <b>The gate is the security.</b> Until this process completes, the student holds a <b>demo / under-review</b> profile — never full access. Registration links are tracked, verification codes are brute-force protected, and a failed registration can be re-applied for or resolved to <b>credit or refund</b> — all automated, all recorded.
+    </div>
+  </section>
+
+  <!-- ============ SECTION 3 : THE STUDENT PORTAL ============ -->
+  <section id="portal" class="reveal">
+    <div class="rule"></div>
+    <div class="sec-head">
+      <div class="num">03</div>
+      <h2>The Student Portal — the campus office</h2>
+      <p>Think of the Student Portal as the main office of a university reception centre. This is where everything student-related is handled — and where the student returns every time they need something from the Academy.</p>
+    </div>
+    <div class="role-cards">
+      <div class="role-card">
+        <div class="r-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <h4>Identity &amp; vital details</h4>
+        <p>Student ID, Student Code, wallet number — masked by default, revealed one field at a time with the eye icon, so the student never loses their logins.</p>
+        <span class="tag">Identity</span>
+      </div>
+      <div class="role-card">
+        <div class="r-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></div>
+        <h4>RFX wallet &amp; credit</h4>
+        <p>Prize money and referral rewards land straight in the wallet. Credit can buy another course, a mentorship session, a seat transfer, or merch.</p>
+        <span class="tag">Money</span>
+      </div>
+      <div class="role-card">
+        <div class="r-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22 6 12 13 2 6"/></svg></div>
+        <h4>Mailbox &amp; invoices</h4>
+        <p>Every official notice lands in the student's own branded inbox — invoices, registration links, announcements — each downloadable as a file.</p>
+        <span class="tag">Official channel</span>
+      </div>
+      <div class="role-card">
+        <div class="r-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></div>
+        <h4>Refer &amp; earn</h4>
+        <p>A referral link and personal code — the student shares the Academy, earns commission once their friend is fully locked in, and rises through tiers.</p>
+        <span class="tag">Growth</span>
+      </div>
+      <div class="role-card">
+        <div class="r-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></div>
+        <h4>Live support</h4>
+        <p>Sarrah, the Academy assistant, answers around the clock. When a human is needed, the student's message reaches the staff team in the same card.</p>
+        <span class="tag">Human line</span>
+      </div>
+      <div class="role-card">
+        <div class="r-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.5 14 15.5 9.5"/></svg></div>
+        <h4>Trust &amp; standing</h4>
+        <p>Every student carries a Trust Bar — how they conduct themselves. It rises with good conduct, falls with breaches, and is always reviewed by a moderator, never judged by a machine alone.</p>
+        <span class="tag">Integrity</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 4 : RFX OS ============ -->
+  <section id="os" class="reveal">
+    <div class="rule"></div>
+    <div class="sec-head">
+      <div class="num">04</div>
+      <h2>RFX OS Academy — the classroom</h2>
+      <p>RFX OS is the Academy itself: lessons, progress, assessments, certificates — the digital home of Reality FX education. It is the most protected room in the building, because it holds the value of the education.</p>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <h3>Authorization, not just URLs</h3>
+        <p>Possessing a lesson URL grants nothing. Every protected resource asks the same question: <b>“Is this authenticated Student ID authorised to access this?”</b> Only a yes delivers content. A student of Course A simply cannot reach Course B's material.</p>
+      </div>
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+        <h3>Content that stays yours</h3>
+        <p>Pages are watermarked with the student's ID, text selection is blocked, printing is blacked out by default, and capture attempts are logged to the moderator. Print access is a privilege earned by trusted students — not a default right.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 5 : THE MACHINE ============ -->
+  <section id="machine" class="reveal">
+    <div class="rule"></div>
+    <div class="sec-head">
+      <div class="num">05</div>
+      <h2>The machine behind it all</h2>
+      <p>Between the Front Desk and the classroom stands an engineered system — measured live, shown honestly. Nothing here is staged; every number is computed by the system right now.</p>
+    </div>
+
+    <div class="machinery">
+      <div class="m-title">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.5 14 15.5 9.5"/></svg></span>
+        <h3>THE MACHINERY — KEEPING YOUR ACADEMY RUNNING</h3>
+      </div>
+      <div class="m-sub">The engine room. It runs 20 system checks and attacks itself with security self-tests — deliberately, the way an intruder would — so it stays ahead of them.</div>
+
+      <div class="machine-rings">
+        <div class="m-ring">
+          <svg viewBox="0 0 100 100">
+            <circle class="tr-track" cx="50" cy="50" r="36"/>
+            <circle class="tr-fill" cx="50" cy="50" r="36" style="--off:0"/>
+          </svg>
+          <div class="m-pct"><b>100%</b><span>Checks</span></div>
+        </div>
+        <div class="m-ring">
+          <svg viewBox="0 0 100 100">
+            <circle class="tr-track" cx="50" cy="50" r="36"/>
+            <circle class="tr-fill" cx="50" cy="50" r="36" style="--off:0"/>
+          </svg>
+          <div class="m-pct"><b>100%</b><span>Security</span></div>
+        </div>
+        <div class="m-ring">
+          <svg viewBox="0 0 100 100">
+            <circle class="tr-track" cx="50" cy="50" r="36"/>
+            <circle class="tr-fill" cx="50" cy="50" r="36" style="--off:14.7"/>
+          </svg>
+          <div class="m-pct"><b>93.5%</b><span>Headroom</span></div>
+        </div>
+        <div class="machine-stats">
+          <div class="row"><b>20/20</b><span>system checks green · full audit, every minute</span></div>
+          <div class="row"><b>5/5</b><span>security attacks defended — the system attacks itself</span></div>
+          <div class="row"><b>35+</b><span>kinds of security events watched and logged</span></div>
+          <div class="row"><b>&lt;0.01 ms</b><span>identity lookup — measured live on this device</span></div>
+        </div>
+      </div>
+
+      <div class="machine-journey">
+        <span class="jp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Payment</span><span class="jsep">→</span>
+        <span class="jp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Enrolment</span><span class="jsep">→</span>
+        <span class="jp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Identity</span><span class="jsep">→</span>
+        <span class="jp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Handshake</span><span class="jsep">→</span>
+        <span class="jp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Academy</span>
+      </div>
+
+      <div class="m-foot">
+        <b>Built for pressure:</b> the whole Academy has been simulated at two thousand students at once — every check still passed, every code stayed unique, every rand reconciled. Deliberately, Reality FX stays small and intimate; quality before quantity, and the machine is what makes that level of care possible for every student.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 6 : YOUR ROLE ============ -->
+  <section id="staff" class="reveal">
+    <div class="rule"></div>
+    <div class="sec-head">
+      <div class="num">06</div>
+      <h2>Your role as staff — the human line</h2>
+      <p>Here is the honest part: <b>you will never need to be a software developer.</b> The system was automated so staff can do what machines cannot — be human with students — while the machine does the heavy lifting.</p>
+    </div>
+    <div class="role-cards">
+      <div class="role-card">
+        <div class="r-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg></div>
+        <h4>Reception &amp; approvals</h4>
+        <p>Staff at the student desk manage the whole process: approving verified registrations, resolving flagged cases, and making sure every student is guided through.</p>
+        <span class="tag">You decide</span>
+      </div>
+      <div class="role-card">
+        <div class="r-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-5.5 9.5A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-2.5L14 9V3"/><line x1="7.5" y1="15" x2="16.5" y2="15"/></svg></div>
+        <h4>Run audits, not code</h4>
+        <p>A one-click full audit checks the whole world — 20 checks, from payment webhooks to handshake confirmations. A repair button fixes what it finds. You pass the spanner; the mechanic is the system.</p>
+        <span class="tag">One click</span>
+      </div>
+      <div class="role-card">
+        <div class="r-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/></svg></div>
+        <h4>Talk to the motherboard</h4>
+        <p>On the rare occasion something is more technical, staff hand it to the system's motherboard — the brain that knows every difficulty the system could face, and how to recover.</p>
+        <span class="tag">The brain</span>
+      </div>
+      <div class="role-card">
+        <div class="r-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <h4>Shifts that never sleep</h4>
+        <p>The reception promise is 24/7. Staff work shifts, clock in for their hours, and hand over — the portal tracks who's on duty, and the machine carries the load between shifts.</p>
+        <span class="tag">24/7</span>
+      </div>
+      <div class="role-card">
+        <div class="r-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <h4>The student desk</h4>
+        <p>Students talk to you when they're stuck, or ask the questions the machine can't answer. You are the warm hand of the Academy — the reason it never feels automated to the people inside it.</p>
+        <span class="tag">The human touch</span>
+      </div>
+      <div class="role-card">
+        <div class="r-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div>
+        <h4>Your slice of the mission</h4>
+        <p>You are helping build a self-reliant school that outlives any one person. Every approval, every kind answer, every clean audit adds to a machine engineered to keep teaching long after all of us.</p>
+        <span class="tag">Legacy</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 7 : LONGEVITY ============ -->
+  <section class="reveal">
+    <div class="rule"></div>
+    <div class="longevity">
+      <div>
+        <div class="l-line">Built to run on its own —<br><span class="gold">so it can outlive any one of us.</span></div>
+        <p>The entire journey — payment, invoice, registration, verification, approval, handshake, classroom — is automated end to end. Staff guide and moderate; the machine carries the load.</p>
+        <p>The Academy was engineered to function without depending on any single person. If the founder were gone tomorrow, someone who understands the system could keep the whole organization running. It can even be handed over — to a son, a successor, a team. That is the longevity Reality FX is built on.</p>
+      </div>
+      <div class="founder-note">
+        <div class="f-quote">“A school that depends on one person will die with them. This Academy was built to outlive us all.”</div>
+        <div class="f-sig">— the founder, who remains anonymous · the learning is the point</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CLOSE ============ -->
+  <section class="reveal" style="text-align:center; padding-bottom:30px;">
+    <div class="eyebrow">Welcome aboard</div>
+    <h2 style="font-family:var(--serif); font-size:clamp(24px,3.4vw,36px); margin-bottom:14px;">The machine is ready. <span class="gold">The family is waiting.</span></h2>
+    <p style="color:var(--muted); max-width:600px; margin:0 auto 10px; font-size:15px;">You are not being asked to run a school by hand. You are joining a system built so that you can do your job with confidence — and a team that has your back, every shift.</p>
+    <button class="print-btn" onclick="window.print()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Save this guide as a PDF
+    </button>
+  </section>
+
+</div>
+
+<footer>
+  <div class="f-mark">REALITY FX</div>
+  <p>The Trading Academy · Since January 2020<br>This is the complete operating guide. The learning is the point.</p>
+  <div class="chain-mini">FRONT DESK <span class="sep">🖥</span> STUDENT PORTAL <span class="sep">🧳</span> RFX OS ACADEMY <span class="sep">👨🏾‍🎓</span></div>
+</footer>
+
+<script>
+  /* reveal-on-scroll */
+  var io = null;
+  var ioHeard = false;
+  var reveals = document.querySelectorAll('.reveal');
+  function showAll() { reveals.forEach(function (el) { el.classList.add('in'); }); }
+  if ('IntersectionObserver' in window) {
+    io = new IntersectionObserver(function (entries) {
+      ioHeard = true;
+      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.06, rootMargin: '0px 0px -30px 0px' });
+    reveals.forEach(function (el) { io.observe(el); });
+    // Safety net: if the observer never delivered a single entry (throttled
+    // iframe, odd scroll container, anything) the document must never stay
+    // blank — reveal everything shortly after load. In normal browsers the
+    // observer fires instantly, so this fallback is inert.
+    setTimeout(function () { if (!ioHeard) showAll(); }, 2000);
+  } else {
+    showAll(); // no observer support (old browser / blocked) — plain content
+  }
+  /* the machine rings redraw whenever they come into view — first visit or scroll-back */
+  var ringIO = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.tr-fill').forEach(function (f) {
+          f.style.animation = 'none';
+          void f.getBoundingClientRect();
+          f.style.animation = '';
+        });
+      }
+    });
+  }, { threshold: 0.4 });
+  var mach = document.querySelector('.machinery');
+</script>
+</body>
+</html>
