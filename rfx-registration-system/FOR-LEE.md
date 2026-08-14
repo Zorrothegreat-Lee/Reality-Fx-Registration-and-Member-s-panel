@@ -1962,3 +1962,24 @@ recorded events.*
 ✅ *done when: the reception hero shows the tagline exactly once (in the logo),
 the Machinery card's rings stay perfectly aligned at every width with their
 captions fully visible, and the closing-stages numbers above reproduce.*
+
+## 9.53 The v60 batch — the trust ring takes the centre stage (System A — built this pass) ⭕
+
+The founder's dash polish: the Trust ring now owns the centre of its card,
+exactly like the OS hero treatment. The "Your Trust" card was ring-left +
+copy-right; it is now a centred column — the 132px ring on top with its soft
+gold breathing glow, then YOUR TRUST · the standing label · the action count
+beneath, all on the same axis. The glow is the OS standard: the SVG
+Gaussian-blur filter hugs the drawn arc (never a box or halo square), and a
+gentle 3.6s pulse breathes so the standing feels alive; caution/low/crit tiers
+shift the glow to their own gold-amber-orange tones. The Machinery ring row
+(from v59) is unchanged: deterministic 4-across → 2×2 → 1 column.
+
+Also hardened `serve.pl`: an empty request line (a bare probe / keep-alive
+ping) used to crash the demo server — it now closes the socket and keeps
+serving. Verified in a real browser (headless Chrome, not the flaky preview
+renderer): ring centred at delta 0 at both 1400px and phone widths, rings
+collapse 4→2→1 exactly at 980px/460px, zero console errors.
+
+✅ *done when: the Trust ring is dead-centre in its card with the soft breathing
+glow at every width, and `perl serve.pl` survives probe connections.*
