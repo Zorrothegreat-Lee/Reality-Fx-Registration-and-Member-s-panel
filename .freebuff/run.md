@@ -33,6 +33,12 @@ RFX_ROOT="$(pwd)" RFX_PORT=8125 perl ../.freebuff/serve_fork.pl
   writes, atomic temp-file + rename). A payload with `"wipe":true` bypasses
   the rev guard — the demo reset always wins, even against a stale high-rev
   state (the guard's one deliberate exception).
+- `GET /api/gate?email=…` → the **gatekeeper contract** (v69): answers "can
+  this identity come in?" from the store's `loginAttempts` record —
+  `{"locked":false}` or `{"locked":true,"lockedUntil":"…","minutesLeft":N}`.
+  `OPTIONS` answers CORS preflight for the OS origin. Production: Lee's OS
+  Cloud Function calls this before issuing any session; the demo bridges it
+  via `RFX.bridge.gateStatus(email)`.
 - Default port 8123 (override with `RFX_PORT`).
 
 To run detached with logging (as the preview does):

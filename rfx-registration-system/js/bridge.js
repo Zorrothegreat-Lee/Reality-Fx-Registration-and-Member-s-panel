@@ -229,5 +229,30 @@ window.RFX = window.RFX || {};
   RFX.bridge = {
     sync, onSync, notify, buildPayload,
     retryNow: sync, // manual retry uses the same idempotent path
+    /* GATEKEEPER contract — the OS never decides who gets in. When it asks
+       "can this identity come in?" the answer comes from HERE: System A's
+       own gate, the same throttle record the sign-in screen enforces. System
+       B only follows; it never mints authorization.
+
+       Production path: the OS Cloud Function calls GET {systemA}/api/gate?email=…
+       before issuing any session. This bridge method mirrors that exactly —
+       it tries the live HTTP endpoint first (the demo server serves it on
+       this origin; production is Lee's Firebase-backed gate), and falls back
+       to the local in-page read of the identical record so the demo never
+       breaks when the server is unreachable. */
+    gateStatus: function (email) {
+      // live HTTP first — the real contract
+      try {
+        if (typeof fetch === 'function') {
+          return fetch('/api/gate?email=' + encodeURIComponent(String(email || '')))
+            .then(function (r) { return r.json(); })
+            .catch(function () { return { locked: false }; });
+        }
+      } catch (e) { /* fall through */ }
+      // local fallback — same record, in-page
+      return Promise.resolve((function () {
+        try { return RFX.db.loginLockoutStatus(email); } catch (e) { return { locked: false }; }
+      })());
+    },
   };
 })();

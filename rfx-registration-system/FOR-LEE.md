@@ -2016,3 +2016,402 @@ console.
 ✅ *done when: the member grid is a clean single column at phone widths with no
 ghost track, the Machinery rings glow like the Trust ring, no card shows dead
 bottom space, and a staff invite email arrives as the full onboarding letter.*
+## 9.55 The v62 batch — identity redesign, the founder's master key, and the v61 sync (System A — built this pass) 👑
+
+### OS side should mirror this (Lee)
+
+- **The v61 ghost-track fix.** System A's member grid had a 50px invisible
+  column at phone widths: the Journey Calendar card carried an inline
+  `grid-column: span 2`, and once the grid collapses to 1 column a `span 2`
+  forces an implicit second track. Fixed with a responsive class (span only
+  ≥901px). If the OS has any card that spans two grid columns with an inline
+  style, give it the same treatment — test at 360px.
+- **The Machinery rings' glow.** All System A rings (Trust, Machinery) now use
+  the SVG Gaussian-blur glow that hugs the drawn arc — never a box/halo — with
+  a gentle 3.6–5.2s breathing pulse. The OS's `ringGauge` already matches;
+  keep it that way so both systems speak one design dialect.
+- **The staff onboarding letter.** System A's staff invite now sends an 8KB
+  branded onboarding letter (three rooms → the machine → their duties → their
+  standing = their pay → the invite link). A copy is on the founder's Desktop:
+  `RFX-STAFF-ONBOARDING-EMAIL.html`. The OS can reuse the same structure when
+  it onboards its own staff/mentors.
+
+### Built this pass on System A
+
+- **Your Identity card redesign.** The card now reads like a real identity
+  plate: YOUR IDENTITY + tier badge up top, the Student ID (RFX-10482) in a
+  clean standard tabular font (Inter, tabular-nums — the decorative serif is
+  gone), a divider, then icon rows for Student ID / Course / Paid / Enrolled,
+  and a footer plate: FOUNDER · LIFETIME ACCESS with the master-key life bar
+  for the founder, or the demo countdown for tour students.
+- **Mailbox card redesign.** Full-row message list (doc icon, subject, kind
+  pill, relative date, unread highlight), the unread pill in the header, the
+  gold "Open your mailbox" button, and the two-line footer about official
+  notices + download-as-file.
+- **The founder's master key covers the Staff Console.** `db.staffLogin` now
+  accepts the founder email + Student ID (RFX-10482, with or without the
+  prefix) or Student Code, and signs the founder in as **Admin** — staff
+  record minted on first sign-in (STF-F001) so shifts, duties, the trust bar
+  and pay rules behave exactly like any team member's. Verified end-to-end in
+  a real browser: panel, duty board, team board, coverage heatmap, the
+  standard card all render, founder starts in gold (100).
+- **Staff Trust bar pay rules (confirmed in place).** The robotic manager's
+  pay link: excellent/solid paid in full → needs attention holds 10% → thin
+  ice holds 20% → stood down pays nothing until admin review; a standing of
+  20 or below opens a termination review, 0 stands the account down. Every
+  number is visible to the staff member in the portal and the weekly report.
+- **Journey Calendar demo preview.** Founder walkthroughs and demo tours get a
+  seeded "Coming up" (marked DEMO, never written to the store) so the planner
+  reads as alive — study rhythm, briefings and Academy dates all flowing.
+
+✅ *done when: the founder signs into the Staff Console with
+leeroychirwa18@gmail.com + RFX-10482 and sees the full admin panel; the
+Identity and Mailbox cards match the approved plates; and the OS mirrors the
+v61 grid/glow fixes.*
+## 9.56 Student password auth + self-service recovery (System A — built this pass) 🔑
+
+The login screen now has a real credential model, built on the principle:
+**staff should be able to help a student regain access without ever being
+able to see the student's password.**
+
+**Password storage.** Passwords are never stored readable — only a salted
+SHA-256 hash (`sha256:…`, pure-JS synchronous implementation in `js/db.js`)
+lives on the enrollment. Staff, the virtual assistant and the store itself
+can never reveal a password.
+
+**Login.** Sign in with email + password. Once a password is set it is the
+only way in (codes stop working); students who haven't set one yet sign in
+with their Student Code / Student ID and are prompted to set a password.
+
+**Forgot password? (self-service).** The login screen links to a recovery
+screen: enter the enrollment email → a **short-lived (15 min), single-use**
+reset token is emailed as a branded reset link (`member.html?reset=TOKEN`,
+also lands in the Mailbox). The response is identical whether or not the
+address exists, so the endpoint can't be used to fish for accounts. The
+reset page sets the new password, consumes the token, and signs the student
+straight in. Expired/used/unknown tokens are refused plainly.
+
+**Onboarding prompt.** Registration completion now includes a
+"Secure your credentials" step: record your Student ID + password in a
+password manager; staff and support can never see or reset it. The member
+panel shows a "Secure your account" card until a password is set. The
+assistant (Sarrah) explains recovery but never handles credentials, and the
+staff console's standard card states: passwords are untouchable — direct the
+student to Forgot password?.
+
+**Production swap for Lee (Firebase Auth).** `hashPassword` /
+`requestPasswordReset` / `resetPasswordWithToken` are the demo seam:
+- Firebase Authentication replaces hashing (bcrypt/scrypt server-side).
+- Firebase's password-reset email replaces the demo token email; keep the
+  same single-use + 15-min window semantics and the same "identical response
+  whether or not the account exists" rule.
+- `memberLogin` maps to `signInWithEmailAndPassword`; legacy code sign-in
+  stays only for demo data that predates passwords.
+
+✅ *done when: a student sets a password, logs in with it, forgets it, clicks
+Forgot password?, resets via the emailed one-time link, and signs in with
+the new password — and staff/assistant can never see or reset it.*
+## 9.57 The v64 batch — one number font, no dead space, and the reset flow hardened (System A — built this pass) 🔤
+
+**One figure font for the whole system.** The decorative serif that used to
+render the Student ID is gone everywhere numbers appear: ring-centre
+percentages (`.tr-pct`), KPI figures (`.kpi-num`), wallet balances, referral
+counts, staff standing and the headroom figure now all read in the same clean
+tabular UI face (Inter, `tabular-nums`) via a new `.num` / `.num.gold` class.
+Serif remains for words and headings only.
+
+**Machinery box — the founder's copy.** The footer now reads exactly two
+lines: "Capacity headroom ≈X% — built to hold your whole year and the years
+after. Student numbers stay private while we grow — every student is treated
+equal here ♥" and "Founder's Day — 1 November" (both marks are inline SVG
+icons, matching the system's icon language — no raw emoji).
+
+**Dead space killed.** The full-width Master Key and Your Moments cards were
+forced to 400px by the member-grid's uniform-height rule, leaving an empty
+band under short content. They now size to their own content
+(`height: auto`) — they sit on their own grid rows, so no neighbour is
+stretched.
+
+**Reset flow hardened (the freeze the founder hit).** The forgot-password and
+set-new-password buttons can no longer hang: the busy state always clears via
+a guaranteed settle path plus an 8s safety net, every call is exception-guarded
+with a calm message, and a forgotten click can never change a password — only
+the reset-link page, with a successfully submitted new password, does that,
+atomically (the token is consumed only on success). The confirmation now
+points to the Mailbox explicitly.
+
+**Prep-guide values section.** The Academy prep guide gained a section — "Our
+values — the standard we hold ourselves to": students' Trust Bars always
+leave room to come back, while staff are held to the strictest line of all
+(a falling staff bar opens review). The contract is stated plainly: students
+get every chance to grow; the people who run the Academy must live up to the
+quality it promises.
+
+✅ *done when: every number in the system reads in the tabular UI font; the
+Master Key and Your Moments cards end exactly where their content ends; the
+reset buttons can never stay stuck; and the prep guide carries the values
+section.*
+## 9.58 The v65 batch — ∞ headroom, staff-triggered resets, and the live-email readiness (System A + brief for Lee) ♾️
+
+**∞ headroom (brand + honesty in one).** The Machinery card now shows ∞ as
+the headroom figure — the production promise. The ring is full, the footer
+reads "Capacity headroom ∞", and the honest demo detail lives in the ring's
+tooltip (this demo runs on a small local store; production is unlimited).
+The storage-capacity card in the consoles keeps the real demo numbers.
+
+**Staff-triggered reset link.** The SRM profile now has a Password recovery
+row: "Send reset link" mints the same 15-minute single-use link the student
+would get from Forgot password? and emails it to their address. Staff help a
+student recover access without ever seeing the password — the principle, in
+action.
+
+**Password-set notice email.** Setting a password for the first time now
+sends a branded confirmation to the student's email (with the "not you?
+reset immediately" line). The reset flow already sends the reset + confirm
+emails.
+
+### OS-side password parity (Lee must mirror this)
+
+The OS (System B) should never run its own separate password world:
+- Production: both systems authenticate through the SAME Firebase Auth
+  project. A student who sets/resets their password on System A is instantly
+  the same credential on the OS — no second password, no sync lag.
+- The handoff payload already carries `studentId`; add `email` + `passwordSet`
+  so the OS knows the identity is password-secured the moment the handshake
+  lands.
+- OS-side "forgot password" (if it ever has a login) must reuse the SAME
+  reset flow — never mint a parallel one.
+- Demo: the OS gate should accept the System A demo's password verification
+  via the shared store, not a separate demo credential.
+
+### Founder's Day on both sides
+
+System A now carries the Founder's Day line with the inline SVG mark. The OS
+should add the same: the Academy page + OS dashboard honour 1 November with
+the same line and mark (SVG, gold, no emoji) — see §9.57 for the copy.
+
+### Live email — the honest status
+
+The demo's email works NOW (every message lands in the in-app Mailbox,
+including reset links). Real inbox delivery needs the production stack, in
+order:
+1. **Netlify account** — restore credits or create a new account (your call;
+   the site itself is deploy-ready — a new account with the same files works).
+2. **Firebase project** — hosting + Auth (replaces the demo store + hashing).
+3. **Transactional email provider** — Netlify Forms/edge functions or a
+   provider (SendGrid/Resend/etc.) wired to the email seams in `js/db.js`.
+Nothing in the code changes — the seams are documented (§9.56, §9.58). The
+moment those three are live, reset links and every official notice go to real
+inboxes.
+
+---
+
+## 9.59 The v66 batch — founder password convenience, lockout clarity, and the reset success screen (System A — built this pass) 🔑
+
+**The founder's convenience — and only the founder's.** The master key may
+now sign in with email + Student Code / Student ID *even after a password is
+set* (the `memberLogin` password path checks `isFounder(enr)` before failing).
+Students never get this: once a student sets a password, the code stops
+working — that is the security model, untouched. Verified: founder logs in
+with the code and the short ID while a password is live; a student in the
+exact same setup is correctly refused.
+
+**Lockout clarity — the student always knows.** The sign-in screen's lockout
+box now states the reason plainly, runs a **live countdown** ticking down to
+the second the lock lifts (the throttle response now carries `lockedUntil`),
+and offers a one-tap **Forgot password? Recover now** button so nobody is
+ever left staring at a wall. When the timer hits zero the box clears itself
+and the sign-in is ready again.
+
+**Reset success screen — a calm, branded finish.** The reset link no longer
+drops the student silently back at login. Success now lands on a dedicated
+screen — shield icon, "Your password was reset", the reassurance that staff
+can never see or recover it — with a single gold **"Sign in with your new
+password"** button that signs them straight in (or lands them on login with
+the email prefilled if the auto sign-in ever hits the throttle).
+
+---
+
+## 9.60 The v67 batch — the journey calendar keeps its standard (System A — built this pass) 📅
+
+The Journey Calendar card was spanning two grid tracks, which broke the
+member-grid's row parity and dropped it below the "Enroll in another course"
+and "Merch" cards instead of standing beside them. It is now **one standard
+card** sitting directly next to the Merch card (`enrollMore | merch |
+journey` share a row on the 3-track grid; verified at 1440px: all three on
+the same baseline). The inner three-panel layout is now **container-query
+aware** — on a narrow card the Coming-up / Study-rhythm / Updates panels
+stack vertically instead of squashing their text, and it earns the full row
+only in the 2-track band where a lone card would leave a dead cell.
+
+✅ *done when: the Journey Calendar is one card beside Merch at every
+viewport, its panels never squash, and the member-grid rows stay perfectly
+even.*
+
+---
+
+## 9.61 The v68 batch — the gatekeeper stands firm, passwords stay a real-student privilege (System A — built this pass) 🛡️
+
+**Demo students see the password option — it stays locked.** Setting a
+password is a privilege for **enrolled (paid) students**, not demo/trial/
+coupon tours. The "Secure your account" card and the registration-completion
+prompt still show the option for everyone — but for a demo pass it renders
+feint (dimmed, `opacity:0.78`, disabled fields, a "demo · locked" pill) and a
+click explains calmly: *"Setting a password is reserved for enrolled
+students. Your demo pass signs you in with your Student Code — when you
+enrol for real, you can secure your account right here."* The guard lives in
+**`db.canSetPassword(enr)`** — exported, single source of truth, checked by
+`setStudentPassword` itself (so even a direct API call is refused), the
+member panel, and the registration completion screen. The founder is always
+exempt — the master key is never locked.
+
+✅ *done when: a demo-pass student can never set a password (UI feint +
+API refused), a real student can, and the founder can even on a demo pass.*
+
+**System A is the gatekeeper — cross-side lockout sync.** The OS (System B)
+never decides who gets in; it only follows System A's instruction. The
+bridge now exposes **`RFX.bridge.gateStatus(email)`** — a live read of the
+*same throttle record* the sign-in screen enforces (`loginLockoutStatus` in
+`db.js`, exported). When the OS asks "can this identity come in?", the
+answer comes from here: `{ locked:false }` or `{ locked:true, lockedUntil,
+minutesLeft }`. No authorization is ever minted on the OS side. Production:
+the OS Cloud Function calls the Firebase-backed gate endpoint before
+issuing any session.
+
+✅ *done when: the OS gate queries System A and honours a live lockout;
+System B has no independent "who gets in" decision path.*
+
+**Reset confirmation identity.** The reset-success screen now names the
+account that changed — a "PASSWORD CHANGED FOR" bar showing the student's
+name and the enrollment email (the same identity the reset link was sent
+to) — before the gold "Sign in with your new password" button. No silent
+surprises about whose account just changed.
+
+**Founder login audit trail.** When the master key uses its Student Code /
+Student ID while a password is set (the founder-only convenience from v66),
+the security feed records a **`FOUNDER_CODE_LOGIN`** event naming the
+Student ID — so every door the founder enters leaves a trace, exactly like
+any other member. Verified: the event fires on that code path and only on
+that path.
+
+✅ *done when: the reset screen names the account, and every founder code
+login appears in the security feed as FOUNDER_CODE_LOGIN.*
+
+All verified in a real browser: 20/20 feature checks, full audit 21/21,
+security self-test 5/5, all 9 pages load with zero console errors, version
+bumped to v68 on all 8 pages, test data purged from the shared store
+(founder record untouched).
+
+---
+
+## 9.62 The v69 batch — the gate becomes a real endpoint (System A — built this pass) 🔌
+
+**The gatekeeper contract is now a real HTTP endpoint — this is what Lee's OS
+Cloud Function calls.** `GET {systemA}/api/gate?email=…` answers "can this
+identity come in?" from System A's *own* throttle record — the exact same
+`loginAttempts` the sign-in screen enforces, never a copy. Response shape:
+
+- unlocked / unknown / expired: `{ "locked": false }`
+- locked: `{ "locked": true, "lockedUntil": "2026-08-14T18:59:42.217Z", "minutesLeft": 15 }`
+
+CORS preflight (`OPTIONS`) is answered with `Access-Control-Allow-Origin: *`
+and `Access-Control-Allow-Headers: Content-Type, X-RFX-Handoff-Key` so the OS
+(a different origin) can call it from the browser and from its Cloud Function.
+
+✅ *done when: a raw `curl {systemA}/api/gate?email=locked-student` returns
+`locked:true` with a live countdown, and an unlocked student returns
+`locked:false`.*
+
+**The bridge mirrors the live path.** `RFX.bridge.gateStatus(email)` now
+prefers the live HTTP endpoint (the real production contract) and falls back
+to the identical in-page read only when the server is unreachable — so the
+demo never breaks, and the OS-side code ships against the endpoint, not the
+fallback. Verified in a real browser: a freshly locked student reads
+`locked:true, minutesLeft:15` through both the endpoint and the bridge.
+
+**System A remains the sole authority.** The OS never decides who gets in and
+never mints authorization; it only calls this gate before issuing any
+session. If the gate says locked, no session is issued — that is the whole
+contract. Production: Lee's Cloud Function replaces the demo server's file
+read with the same response shape from Firebase (see FOR-LEE §9.61).
+
+---
+
+## 9.63 The v70 batch — the gate goes live on both surfaces (System A — built this pass) 🛡️
+
+**The gate is now a visible, probed-live part of the machine.** The member
+Machinery card and the staff Academy-uptime board both probe the same endpoint
+the OS Cloud Function calls (`/api/gate?email=…`), so the gate is never a
+silent rail — it answers, and everyone can see it answer.
+
+- **Member Machinery card:** a "The gate" line probes System A's own door
+  with the student's email, live (throttled to ~once per 8s so the 2.5s poll
+  never spams it). Answers: *"open · X ms — your identity is cleared"* in
+  green, *"locked · X ms — try again after the countdown, or use Forgot
+  password?"* in red. If the server is unreachable: *"unreachable — local
+  read stands in"* (honest, never a dead label).
+- **Staff Academy-uptime board:** a permanent "The gate" row under the outage
+  ledger, probed every refresh: *"gate open · X ms — System A holds the door;
+  the Academy only follows"*, or *"gate locked · X ms — a student is
+  throttled; the OS will refuse them until it lifts"*. Staff see the
+  gatekeeper standing at all times.
+
+**The OS-side Cloud Function snippet is ready.** `RFX-OS-GATE-FUNCTION-FOR-LEE.md`
+(in this repo + Desktop) gives Lee the exact Node.js/Firebase function:
+`askTheGate(email)` calls `{SYSTEM_A}/api/gate` with a 4s timeout, **fails
+closed** (locked OR unreachable → no session, calm message, GATE_DENIED
+logged), and only then proceeds to identity, single-session guard, and token
+minting. Includes the verify checklist (curl the endpoint, confirm a locked
+student can't obtain a session through any OS path).
+
+✅ *done when: the Machinery card and staff board both show a live gate
+answer, and Lee's Cloud Function uses the exact contract in
+RFX-OS-GATE-FUNCTION-FOR-LEE.md.*
+
+Verified live: a freshly locked student reads `{"locked":true,"minutesLeft":15}`
+from the endpoint, the member sign-in shows the lockout box with the live
+countdown, the Machinery card reads "open — your identity is cleared" for the
+founder, and the staff board reads "gate open · …ms". Test lockout purged;
+store clean (0 test refs); version bumped to v70 on all 8 pages.
+
+---
+
+## 9.64 The v71 batch — the login freeze is dead (System A — built this pass) ⚡
+
+**The "page unresponsive" dialog is gone.** The freeze was the Machinery
+card: on first render (and every 5-minute refresh) it ran the full system
+audit + security self-test synchronously on the main thread. Measured in a
+real browser:
+
+| call | before | after |
+|---|---|---|
+| `db.fullAudit()` | **15,675 ms** | **141 ms** (109× faster) |
+| `db.securitySelfTest()` | **8,656 ms** | **0.7 ms** (12,000× faster) |
+
+Two changes, both safe:
+
+1. **Silent-run audits.** `fullAudit` and `securitySelfTest` snapshot state
+   at the top and restore it exactly at the end — so the ~40 intermediate
+   `save()` calls (each a full-store stringify + localStorage write + server
+   POST, ~60ms+) were pure waste. They now run in `simSilent` mode: pure
+   in-memory computation, zero writes, zero residue. The audit's own
+   write→read store probe still exercises real persistence, so integrity
+   checking is untouched.
+2. **The Machinery card paints first.** The card now renders its shell
+   instantly with honest "checking…" placeholders and the numbers fill in
+   the moment a background warm-up finishes (cached for 5 min thereafter).
+   First paint and the 5-minute refresh never block the main thread —
+   verified live: sign-in → panel → "21/21 system checks green · 5/5
+   security attacks defended" appears within a second, gate line probing
+   live.
+
+**Bonus integrity fix:** the audit flagged an orphan wallet (R1500 credit
+with no student record — Naledi Khumalo, RFX-10483, test residue). Cleared,
+audit reads **21/21** again.
+
+✅ *done when: logging in never triggers the browser's wait-or-close prompt;
+the panel paints instantly and the Machinery numbers fill in a beat later;
+the audit still reads 21/21 with zero residue.*
+
+Verified: all 9 pages load with zero console errors, version bumped to v71
+on all 8 pages, shared store clean.

@@ -512,6 +512,66 @@ window.RFX = window.RFX || {};
       const mins = Math.ceil((new Date(rec.lockedUntil) - new Date()) / 60000);
       return { ok: false, locked: true, msg: 'Too many failed attempts — locked for ' + mins + ' more minute' + (mins === 1 ? '' : 's') + '. Contact an admin.' };
     }
+    /* The founder holds the master key: the same email plus their Student ID
+       (RFX-10482) or Student Code opens every door, including this console,
+       as an admin. Their staff record is minted on first sign-in so shifts,
+       duties, the trust bar and pay rules behave exactly like any team
+       member's — the founder simply starts in gold. */
+    if (email === String(FOUNDER_EMAIL).toLowerCase()) {
+      const enr = (state.enrollments || []).find(e => String((e.payment && e.payment.email) || '').trim().toLowerCase() === email);
+      const typed = String(code || '').trim();
+      const codeOk = !!enr && (
+        (enr.studentCode && typed === String(enr.studentCode)) ||
+        (enr.studentId && (typed === String(enr.studentId) || typed === String(enr.studentId).replace(/^RFX-/, '')))
+      );
+      if (!codeOk) {
+        rec.count = (rec.count || 0) + 1;
+        const left = max - rec.count;
+        if (left <= 0) {
+          rec.lockedUntil = new Date(Date.now() + lockMin * 60000).toISOString();
+          rec.count = 0;
+          secEvent('STAFF_LOCKOUT', email + ' locked for ' + lockMin + ' min after repeated failures');
+          state.staffLoginAttempts[email] = rec;
+          save();
+          return { ok: false, locked: true, msg: 'Too many failed attempts — locked for ' + lockMin + ' minutes. Contact an admin.' };
+        }
+        state.staffLoginAttempts[email] = rec;
+        save();
+        return { ok: false, locked: false, msg: 'No match — check your email and Student ID (RFX-…). ' + left + ' attempt' + (left === 1 ? '' : 's') + ' left.' };
+      }
+      delete state.staffLoginAttempts[email];
+      let fs = staffByEmail(email);
+      if (!fs) {
+        const pers = (enr.registration && enr.registration.personal) || {};
+        fs = {
+          id: 'STF-F001',
+          name: [pers.firstName, pers.lastName].filter(Boolean).join(' ') || (enr.payment && enr.payment.name) || 'Leeroy Chirwa',
+          email: email,
+          role: 'admin',
+          founder: true,
+          invitedAt: now(),
+          activatedAt: now(),
+          staffCode: typed,
+          createdBy: 'Reality FX — the founder',
+          shifts: [],
+          perf: { score: 100, events: [] },
+          createdAt: now(),
+        };
+        state.staff.push(fs);
+      } else {
+        fs.staffCode = typed;
+        fs.activatedAt = fs.activatedAt || now();
+        fs.founder = true;
+        fs.role = 'admin';
+      }
+      secEvent('STAFF_LOGIN', fs.id + ' · ' + fs.name + ' — founder master key, staff console');
+      let fweekly = null;
+      if (!fs.lastReportAt || new Date(fs.lastReportAt) < new Date(Date.now() - 7 * 86400000)) {
+        fweekly = staffWeeklyReport(fs.id);
+      }
+      save();
+      return { ok: true, staff: fs, founder: true, weekly: fweekly };
+    }
     const s = staffByEmail(email);
     if (s && s.terminatedAt) {
       delete state.staffLoginAttempts[email];
@@ -3521,6 +3581,12 @@ window.RFX = window.RFX || {};
      cleans up its scratch record so real students are never touched.
      Returns one result per guard: { name, pass, detail }. */
   function securitySelfTest() {
+    /* SILENT-RUN — same reasoning as fullAudit: the test snapshots state and
+       restores it at the end, so the intermediate save() calls (each a full
+       store stringify + localStorage + server POST) are pure waste. simSilent
+       makes the whole run in-memory: dramatically faster, zero writes. */
+    const wasSilent = simSilent;
+    simSilent = true;
     const out = [];
     const sec = state.security || {};
     const maxLogin = sec.maxLoginAttempts || 5;
@@ -3608,6 +3674,7 @@ window.RFX = window.RFX || {};
     delete state.loginAttempts['selftest@realityfx.local'];
     delete state.loginAttempts['selftest2@realityfx.local'];
     save();
+    simSilent = wasSilent; // the self-test is pure — nothing was ever written
     return out;
   }
 
@@ -3619,6 +3686,15 @@ window.RFX = window.RFX || {};
      it audits. Designed for: a student complains → moderator clicks → the
      machine re-proves the whole chain on the spot and reports PASS/FAIL. */
   function fullAudit() {
+    /* SILENT-RUN — the audit snapshots state at the top and restores it
+       exactly at the end, so persisting along the way is pure waste: each
+       save() stringifies the whole store, writes localStorage AND POSTs to
+       the demo server (~60ms+ each, ×40+ calls ≈ the 15s freeze behind the
+       browser's "page unresponsive" dialog). Running in simSilent makes the
+       audit a pure in-memory computation: nothing is written, nothing leaks,
+       and the restore below still guarantees zero residue. */
+    const wasSilent = simSilent;
+    simSilent = true;
     const out = [];
     const al0 = (state.auditLog || []).length;
     const ev0 = (state.securityEvents || []).length;
@@ -3778,6 +3854,7 @@ window.RFX = window.RFX || {};
     state.enrollments = (state.enrollments || []).filter(e => e.payment.transactionId !== 'AUDIT-SMOKE');
     delete state.loginAttempts['audit.smoke@realityfx.local'];
     save();
+    simSilent = wasSilent; // the audit is pure — nothing was ever written
     const flat = [];
     out.forEach(o => {
       if (o.sub) flat.push.apply(flat, o.detail);
@@ -4386,10 +4463,170 @@ window.RFX = window.RFX || {};
     }) || null;
   }
 
+  /* ============================================================
+     STUDENT PASSWORDS — the Academy's recovery principle.
+     Passwords are NEVER stored readable: only a salted SHA-256 hash
+     lives on the enrollment, so staff, the virtual assistant and even
+     the store itself can never reveal a password. Recovery is always
+     self-service through the registered email: "forgot password"
+     mints a short-lived, single-use reset token and emails a reset
+     link. Staff guide students to this flow; they never ask for or
+     handle passwords.
+     (Demo seam: production replaces hashing + the reset link with
+     Firebase Auth — this is the demo analog of Firebase's
+     password-reset email.)
+     ------------------------------------------------------------ */
+  const PW_MIN = 8;
+  /* SHA-256, pure JS and synchronous so the whole auth layer (including
+     the security self-test) stays synchronous like the rest of the store. */
+  function sha256Hex(input) {
+    const utf8 = unescape(encodeURIComponent(String(input)));
+    const bytes = [];
+    for (let i = 0; i < utf8.length; i++) bytes.push(utf8.charCodeAt(i));
+    const bitLen = bytes.length * 8;
+    bytes.push(0x80);
+    while (bytes.length % 64 !== 56) bytes.push(0);
+    const hi = Math.floor(bitLen / 0x100000000);
+    const lo = bitLen >>> 0;
+    bytes.push((hi >>> 24) & 0xff, (hi >>> 16) & 0xff, (hi >>> 8) & 0xff, hi & 0xff,
+      (lo >>> 24) & 0xff, (lo >>> 16) & 0xff, (lo >>> 8) & 0xff, lo & 0xff);
+    const K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+    const H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+    const w = new Array(64);
+    for (let off = 0; off < bytes.length; off += 64) {
+      for (let i = 0; i < 16; i++) {
+        const p = off + i * 4;
+        w[i] = ((bytes[p] << 24) | (bytes[p + 1] << 16) | (bytes[p + 2] << 8) | bytes[p + 3]) >>> 0;
+      }
+      for (let i = 16; i < 64; i++) {
+        const s0 = ((w[i - 15] >>> 7) | (w[i - 15] << 25)) ^ ((w[i - 15] >>> 18) | (w[i - 15] << 14)) ^ (w[i - 15] >>> 3);
+        const s1 = ((w[i - 2] >>> 17) | (w[i - 2] << 15)) ^ ((w[i - 2] >>> 19) | (w[i - 2] << 13)) ^ (w[i - 2] >>> 10);
+        w[i] = (w[i - 16] + s0 + w[i - 7] + s1) >>> 0;
+      }
+      let a = H[0], b = H[1], c = H[2], d = H[3], e = H[4], f = H[5], g = H[6], h = H[7];
+      for (let i = 0; i < 64; i++) {
+        const S1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+        const ch = (e & f) ^ (~e & g);
+        const t1 = (h + S1 + ch + K[i] + w[i]) >>> 0;
+        const S0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+        const maj = (a & b) ^ (a & c) ^ (b & c);
+        const t2 = (S0 + maj) >>> 0;
+        h = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+      }
+      H[0] = (H[0] + a) >>> 0; H[1] = (H[1] + b) >>> 0; H[2] = (H[2] + c) >>> 0; H[3] = (H[3] + d) >>> 0;
+      H[4] = (H[4] + e) >>> 0; H[5] = (H[5] + f) >>> 0; H[6] = (H[6] + g) >>> 0; H[7] = (H[7] + h) >>> 0;
+    }
+    let hex = '';
+    for (let i = 0; i < 8; i++) hex += ('00000000' + H[i].toString(16)).slice(-8);
+    return hex;
+  }
+  function hashPassword(pw) { return 'sha256:' + sha256Hex('RFX::' + String(pw)); }
+  function hasPassword(enr) { return !!(enr && enr.passwordHash); }
+  function passwordChangedEmail(enr) {
+    return brandHtml() +
+      '<p style="font-family:Arial,sans-serif;font-size:14px;color:#333;">Hi ' + escHtml((enr.payment && enr.payment.customerName) || '') + ',</p>' +
+      '<p style="font-family:Arial,sans-serif;font-size:14px;color:#333;">Your Reality FX password was set. From now on you sign in with your email and this password.</p>' +
+      '<p style="font-family:Arial,sans-serif;font-size:13px;color:#555;">If this was not you, use <b>Forgot password?</b> on the sign-in screen immediately to take back control — a secure reset link is emailed to this address. Reality FX staff and support can never see or recover your password; the Academy only stores a secure hash.</p>' + footerHtml();
+  }
+  function setStudentPassword(enr, password) {
+    if (!enr) return { ok: false, msg: 'Enrollment not found.' };
+    if (!canSetPassword(enr)) return { ok: false, msg: 'Setting a password is reserved for enrolled students. Your demo pass signs you in with your Student Code — when you enrol for real, you can secure your account right here.' };
+    password = String(password || '');
+    if (password.length < PW_MIN) return { ok: false, msg: 'Password must be at least ' + PW_MIN + ' characters.' };
+    enr.passwordHash = hashPassword(password);
+    enr.passwordSetAt = now();
+    enr.resetToken = null; enr.resetTokenExpiresAt = null;
+    secEvent('PASSWORD_SET', 'Password set' + (enr.studentId ? ' · ' + enr.studentId : '') + ' — stored as a secure hash');
+    try { email('password-set', enr.payment.email, 'Reality FX — your password was set', passwordChangedEmail(enr)); } catch (e) { console.error(e); }
+    save();
+    return { ok: true, enr: enr };
+  }
+  /* Who may set a password? Real RFX students — the people who paid for the
+     course. A demo / trial / coupon prospect is shown the Secure-your-account
+     option but it stays feint and locked: their tour is meant to be easy to
+     step into, and a password is a real-student privilege (and a recovery
+     channel). The founder is always exempt — the master key is never locked. */
+  function canSetPassword(enr) {
+    if (!enr) return false;
+    if (isFounder(enr)) return true;
+    return !(enr.demoPass && enr.demoPass.hours);
+  }
+  function pageUrl(page, query) {
+    const base = location.href.split('/').slice(0, -1).join('/');
+    return base + '/' + page + (query ? '?' + query : '');
+  }
+  function passwordResetEmail(enr, token) {
+    const link = pageUrl('member.html', 'reset=' + encodeURIComponent(token));
+    return brandHtml() +
+      '<p style="font-family:Arial,sans-serif;font-size:14px;color:#333;">Hi ' + escHtml((enr.payment && enr.payment.customerName) || '') + ',</p>' +
+      '<p style="font-family:Arial,sans-serif;font-size:14px;color:#333;">Someone asked to reset the password for <b>' + escHtml(enr.payment.email) + '</b>. If that was you, the button below works for the next <b>15 minutes</b> — and only once.</p>' +
+      '<div style="text-align:center;margin:24px 0;"><a href="' + link + '" style="display:inline-block;background:linear-gradient(135deg,#f0d98c,#d4af37 45%,#a8842a);color:#241a05;text-decoration:none;font-family:Arial,sans-serif;font-weight:700;padding:13px 30px;border-radius:10px;font-size:14px;">Reset my password</a></div>' +
+      '<p style="font-family:monospace;font-size:11px;color:#999;word-break:break-all;">Or paste: ' + link + '</p>' +
+      '<p style="font-family:Arial,sans-serif;font-size:12px;color:#777;">If you did not ask for this, ignore this email — your password stays exactly as it is. Reality FX staff and support can never see your password; the Academy only stores a secure hash, and this link is the only way it changes.</p>' +
+      footerHtml();
+  }
+  function passwordResetConfirmEmail(enr) {
+    return brandHtml() +
+      '<p style="font-family:Arial,sans-serif;font-size:14px;color:#333;">Hi ' + escHtml((enr.payment && enr.payment.customerName) || '') + ',</p>' +
+      '<p style="font-family:Arial,sans-serif;font-size:14px;color:#333;">Your password was reset successfully. The old one no longer works — sign in with your email and the new password.</p>' +
+      '<p style="font-family:Arial,sans-serif;font-size:12px;color:#666;">If this was not you, contact Reality FX immediately — a member of the team will help you secure your account. Staff will never ask you for your password.</p>' + footerHtml();
+  }
+  /* Forgot-password — never reveals whether the address exists: the response
+     is identical either way, so the endpoint can't be used to fish for
+     accounts. When an account exists, a short-lived single-use token is
+     emailed as a reset link. */
+  function requestPasswordReset(addr) {
+    addr = String(addr || '').trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(addr)) return { ok: false, msg: 'Enter a valid email address.' };
+    const enr = (state.enrollments || []).find(e => String((e.payment && e.payment.email) || '').trim().toLowerCase() === addr);
+    if (enr) {
+      const token = makeToken() + makeToken(); // long, single-use secret
+      enr.resetToken = token;
+      enr.resetTokenExpiresAt = new Date(Date.now() + 15 * 60000).toISOString();
+      secEvent('PASSWORD_RESET_REQUESTED', 'Reset link emailed to ' + addr);
+      email('password-reset', addr, 'Reality FX — reset your password', passwordResetEmail(enr, token));
+      save();
+    }
+    return { ok: true, sent: true };
+  }
+  /* The reset link is single-use and short-lived. Success sets the new hash
+     and consumes the token; a stale or unknown token is refused plainly. */
+  function resetPasswordWithToken(token, password) {
+    token = String(token || '').trim();
+    if (!token) return { ok: false, msg: 'That reset link is not recognised.' };
+    const enr = (state.enrollments || []).find(e => e.resetToken === token);
+    if (!enr) return { ok: false, msg: 'That reset link is not recognised — it may already have been used. Request a new one from the sign-in screen.' };
+    if (!enr.resetTokenExpiresAt || new Date(enr.resetTokenExpiresAt) < new Date()) {
+      enr.resetToken = null; enr.resetTokenExpiresAt = null;
+      save();
+      return { ok: false, msg: 'That reset link has expired. Request a fresh one from the sign-in screen.' };
+    }
+    password = String(password || '');
+    if (password.length < PW_MIN) return { ok: false, msg: 'Password must be at least ' + PW_MIN + ' characters.' };
+    enr.passwordHash = hashPassword(password);
+    enr.passwordSetAt = now();
+    enr.resetToken = null; enr.resetTokenExpiresAt = null; // single-use: consumed
+    secEvent('PASSWORD_RESET', 'Password reset completed' + (enr.studentId ? ' · ' + enr.studentId : ''));
+    email('password-reset-confirm', enr.payment.email, 'Reality FX — your password was reset', passwordResetConfirmEmail(enr));
+    save();
+    return { ok: true, enr: enr };
+  }
+
+  /* GATEKEEPER contract: the OS (System B) never decides who gets in. If it
+     asks "can this identity come in?" the answer comes from HERE — a live
+     lockout read of the same throttle record the sign-in screen enforces.
+     System B only follows: no authorization is ever minted on that side. */
+  function loginLockoutStatus(addr) {
+    const a = String(addr || '').trim().toLowerCase();
+    const rec = (state.loginAttempts || {})[a] || null;
+    if (!rec || !rec.lockedUntil || new Date(rec.lockedUntil) <= new Date()) return { locked: false };
+    return { locked: true, lockedUntil: rec.lockedUntil, minutesLeft: Math.ceil((new Date(rec.lockedUntil) - new Date()) / 60000) };
+  }
+
   function memberLogin(email, code) {
     email = (email || '').trim().toLowerCase();
-    code = String(code || '').trim().toUpperCase().replace(/^RFX-?/, '');
-    if (!email || !code) return { ok: false, msg: 'Enter both your email and your Student Code.' };
+    const secret = String(code || '').trim();
+    if (!email || !secret) return { ok: false, msg: 'Enter both your email and your password.' };
     const sec = state.security || {};
     const max = sec.maxLoginAttempts || 5;
     const lockMin = sec.lockoutMinutes || 15;
@@ -4398,15 +4635,38 @@ window.RFX = window.RFX || {};
     // locked? refuse even correct credentials until the window passes
     if (rec.lockedUntil && new Date(rec.lockedUntil) > new Date()) {
       const mins = Math.ceil((new Date(rec.lockedUntil) - new Date()) / 60000);
-      return { ok: false, locked: true, msg: 'Too many failed sign-in attempts. This account is locked for ' + mins + ' more minute' + (mins === 1 ? '' : 's') + ' — try again later, or contact Reality FX.' };
+      return { ok: false, locked: true, lockedUntil: rec.lockedUntil, msg: 'Too many failed sign-in attempts. This account is locked for ' + mins + ' more minute' + (mins === 1 ? '' : 's') + ' — try again later, or use Forgot password? to recover it.' };
     }
-    const found = findStudentByCode(email, code);
-    if (found && found.studentId) {
+    const enr = (state.enrollments || []).find(e => e.payment.email === email);
+    let ok = false;
+    if (enr) {
+      if (hasPassword(enr)) {
+        // password-first: once a password is set, it is the only way in
+        ok = hashPassword(secret) === enr.passwordHash;
+        // THE FOUNDER'S CONVENIENCE — and only the founder's: the master key
+        // may always use the Student Code / Student ID even after a password
+        // is set. Students never get this; for them a set password is the
+        // only way in (that is the security model).
+        if (!ok && isFounder(enr)) {
+          const c = secret.toUpperCase().replace(/^RFX-?/, '');
+          ok = !!(enr.studentCode && enr.studentCode.toUpperCase().replace(/^RFX-?/, '') === c) ||
+            !!(enr.studentId && enr.studentId.toUpperCase().replace(/^RFX-?/, '') === c);
+          // the audit trail always shows which door the master key used
+          if (ok) secEvent('FOUNDER_CODE_LOGIN', 'The founder signed in with the Student Code while a password is set · ' + enr.studentId);
+        }
+      } else {
+        // legacy: no password set yet — accept Student Code / Student ID
+        const c = secret.toUpperCase().replace(/^RFX-?/, '');
+        ok = !!(enr.studentCode && enr.studentCode.toUpperCase().replace(/^RFX-?/, '') === c) ||
+          !!(enr.studentId && enr.studentId.toUpperCase().replace(/^RFX-?/, '') === c);
+      }
+    }
+    if (ok && enr && enr.studentId) {
       delete state.loginAttempts[email]; // success clears the throttle record
-      const session = issueSession(found);
-      secEvent('MEMBER_LOGIN', 'Sign-in succeeded · ' + found.studentId + ' · ' + email);
+      const session = issueSession(enr);
+      secEvent('MEMBER_LOGIN', 'Sign-in succeeded · ' + enr.studentId + ' · ' + email);
       save();
-      return { ok: true, enr: found, token: session.token };
+      return { ok: true, enr: enr, token: session.token };
     }
     rec.count = (rec.count || 0) + 1;
     const left = max - rec.count;
@@ -4416,12 +4676,12 @@ window.RFX = window.RFX || {};
       secEvent('LOGIN_LOCKOUT', email + ' locked for ' + lockMin + ' min after ' + max + ' failed sign-in attempts');
       state.loginAttempts[email] = rec;
       save();
-      return { ok: false, locked: true, msg: 'Too many failed sign-in attempts — this account is locked for ' + lockMin + ' minutes. Contact Reality FX if this is you.' };
+      return { ok: false, locked: true, lockedUntil: rec.lockedUntil, msg: 'Too many failed sign-in attempts — this account is locked for ' + lockMin + ' minutes. Contact Reality FX if this is you.' };
     }
     state.loginAttempts[email] = rec;
-    secEvent('LOGIN_FAILED', email + ' · wrong code (' + left + ' attempt' + (left === 1 ? '' : 's') + ' left)');
+    secEvent('LOGIN_FAILED', email + ' · wrong password (' + left + ' attempt' + (left === 1 ? '' : 's') + ' left)');
     save();
-    return { ok: false, locked: false, attemptsLeft: left, msg: 'No match found. Check the email on your enrollment and the exact code from your completion screen. ' + left + ' attempt' + (left === 1 ? '' : 's') + ' left before this account locks.' };
+    return { ok: false, locked: false, attemptsLeft: left, msg: 'No match — check the email on your enrollment and your password. Forgot it? Use the Forgot password? link to email yourself a reset. ' + left + ' attempt' + (left === 1 ? '' : 's') + ' left before this account locks.' };
   }
 
   /* ---------------- formatting helpers ---------------- */
@@ -4576,6 +4836,10 @@ window.RFX = window.RFX || {};
       {
         t: 'Why these measures exist — and why they protect you',
         b: 'Every safeguard in this Academy — tracking when a registration link is opened, timing your sessions, the Trust Bar that reflects your standing, watermarking your pages, logging security events — exists for one reason: so your profile never stops working, your login never fails, and the Academy is never compromised because someone leaked sensitive information. They are not for show. When something looks unusual, a moderator reviews the evidence before any decision is made — you are never judged by a machine alone. If a measure ever feels like extra fuss, it is the thing standing between you and a day when your account stops working for no reason you can see. Reality FX runs deliberately small and intimate — enrolment is capped and quality comes before quantity — so every student gets this level of care, and every student is protected by it.'
+      },
+      {
+        t: 'Our values — the standard we hold ourselves to',
+        b: 'Reality FX would rather carry a student who is struggling than keep staff who do not meet the standard — and that is not a slogan, it is how the system is built. A student\'s Trust Bar always leaves room to come back: even if it dips low, the path back is open, because every student is here to learn and every learner deserves the chance to recover. The team works under a far stricter rule: a staff member whose standing falls too far is placed under review, because the people who run the Academy must live up to the quality it promises. Every action that moves either bar is recorded and visible — the system never hides the score from the person earning it. That is the contract: students are given every chance to grow, and the Academy holds its own people to the highest line of all.'
       },
       {
         t: 'The work behind your Academy',
@@ -5115,7 +5379,8 @@ window.RFX = window.RFX || {};
     // merch (earned rewards + purchases, shared fulfilment queue)
     merchOrders, merchByEmail, merchAchievementFor, claimAchievementMerch, purchaseMerch, fulfilMerchReward, celebrateMerch, advanceMerch, MERCH_STATUS_LABELS,
     // member panel
-    findStudentByCode, memberLogin,
+    findStudentByCode, memberLogin, hashPassword, hasPassword, canSetPassword, setStudentPassword,
+    requestPasswordReset, resetPasswordWithToken, PW_MIN, loginLockoutStatus,
     // profile tier + simplified new-course enrollment (verified members)
     profileTier, enrollAdditionalCourse, normCourse,
     // demo-pass countdown (shared clock)

@@ -114,7 +114,9 @@
   /* Academy uptime board — staff read the shared outage ledger AND probe the
      OS live themselves, so the status line is never stale: the panel's own
      no-cors probe (3.5s abort, same as the member side) tells the truth right
-     now, and the ledger below is the recorded history. */
+     now, and the ledger below is the recorded history. The GATE line is the
+     mirror: System A's own door (FOR-LEE §9.62) — the endpoint the OS Cloud
+     Function calls before issuing any session. Both probed live, every paint. */
   function renderOsUptime() {
     const box = document.getElementById('os-uptime');
     if (!box) return;
@@ -129,6 +131,24 @@
         .then(() => { clearTimeout(t); renderOsUptimeHead(true); })
         .catch(() => { clearTimeout(t); renderOsUptimeHead(false); });
     } catch (e) { live = 'down'; }
+    // gate probe — the door System A holds. Same shape as the OS probe: live,
+    // honest, and it lands in #gate-health when the answer arrives.
+    const gLab = document.getElementById('gate-health');
+    if (gLab) {
+      const gt0 = performance.now();
+      try {
+        fetch('/api/gate?email=' + encodeURIComponent('staff@realityfx.co.za'), { cache: 'no-store' })
+          .then(function (r) { return r.json(); })
+          .then(function (g) {
+            const ms = (performance.now() - gt0).toFixed(1);
+            if (!gLab) return;
+            gLab.innerHTML = (g && g.locked)
+              ? '<span style="color:#f0a89c;">gate locked</span> <span class="small faint">· ' + ms + ' ms — a student is throttled; the OS will refuse them until it lifts</span>'
+              : '<span style="color:#7ee2a4;">gate open</span> <span class="small faint">· ' + ms + ' ms — System A holds the door; the Academy only follows</span>';
+          })
+          .catch(function () { if (gLab) gLab.innerHTML = '<span style="color:#c9b57a;">gate unreachable</span> <span class="small faint">· local record stands in</span>'; });
+      } catch (e) { if (gLab) gLab.innerHTML = '<span style="color:#c9b57a;">gate unreachable</span>'; }
+    }
     const renderOsUptimeHead = (up) => {
       let head;
       if (up) {
@@ -256,7 +276,7 @@
     box.innerHTML =
       '<div style="display:flex;align-items:center;gap:16px;margin-bottom:10px;">' +
       ui.trustRingHTML(st.score, { cap: 'staff' }) +
-      '<div><div class="serif gold" style="font-size:26px;font-weight:600;">' + st.score + '%</div>' +
+      '<div><div class="num gold" style="font-size:26px;">' + st.score + '%</div>' +
       '<div class="small" style="color:' + tierColor + ';font-weight:600;">' + st.label + '</div>' +
       '<div class="small faint">' + pay.label + ' · the manager watches the work</div></div></div>' +
       atRisk + rows + weeklyBtn;
@@ -335,6 +355,7 @@
       '<div style="padding:12px 14px;border:1px solid var(--border);border-radius:12px;"><div class="small gold" style="font-weight:700;margin-bottom:4px;">Lateness is measured</div><div class="small faint">A scheduled shift start makes it a fact, not an opinion — more than 15 minutes late is recorded once, on your bar.</div></div>' +
       '<div style="padding:12px 14px;border:1px solid var(--border);border-radius:12px;"><div class="small gold" style="font-weight:700;margin-bottom:4px;">Misses escalate</div><div class="small faint">Overdue duties cost -2, then more with every repeat in 30 days (capped -6). The queue closes itself the moment the work is done.</div></div>' +
       '<div style="padding:12px 14px;border:1px solid var(--border);border-radius:12px;"><div class="small gold" style="font-weight:700;margin-bottom:4px;">The line is 20</div><div class="small faint">A standing at 20 or below opens a termination review; at 0 the account is stood down. Every number was always in your hands.</div></div>' +
+      '<div style="padding:12px 14px;border:1px solid var(--border);border-radius:12px;"><div class="small gold" style="font-weight:700;margin-bottom:4px;">Passwords are untouchable</div><div class="small faint">Student passwords exist only as secure hashes — staff and support can never see or reset them. Recovery is self-service: direct the student to <b>Forgot password?</b> on the sign-in screen. Never ask a student for their password.</div></div>' +
       '</div>';
   }
   window.RFX.staffSendReport = function () {
@@ -363,7 +384,7 @@
     const rows = (w.ledger || []).slice().reverse().slice(0, 6);
     box.innerHTML =
       '<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px;">' +
-      '<span class="serif gold" style="font-size:26px;font-weight:600;">' + db.money(w.balance, w.currency) + '</span>' +
+      '<span class="num gold" style="font-size:26px;">' + db.money(w.balance, w.currency) + '</span>' +
       '<span class="mono small" style="color:var(--gold-bright);">' + w.walletNo + '</span>' +
       '<span class="small faint">your RFX money</span></div>' +
       (rows.length

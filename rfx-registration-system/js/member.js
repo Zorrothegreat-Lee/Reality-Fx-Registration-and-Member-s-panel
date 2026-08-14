@@ -94,9 +94,7 @@
       if (!r.ok) {
         ui.busyButton(btn, false);
         if (r.locked) {
-          ui.toastErr(r.msg);
-          show('m-lockout');
-          $('m-lockout').textContent = r.msg;
+          showLockout(r);
         } else {
           ui.toastErr(r.msg);
         }
@@ -115,6 +113,219 @@
       ui.toastOk('Welcome back, ' + enr.payment.customerName + '.');
     }, 120);
   }
+
+  /* ---------------- forgot password / reset ----------------
+     Recovery is self-service: the login screen links here, a short-lived
+     single-use token is emailed to the registered address, and the reset
+     link page sets the new password. Staff never see or handle passwords. */
+  let resetToken = null;
+  function showReset() { show('screen-reset'); hide('screen-login'); hide('screen-setpw'); hide('screen-reset-done'); hide('screen-panel'); }
+  function backToLogin() { show('screen-login'); hide('screen-reset'); hide('screen-setpw'); hide('screen-reset-done'); hide('screen-panel'); }
+
+  /* LOCKOUT CLARITY — the student always knows exactly what happened and
+     what to do. The lockout box states the reason plainly, shows a live
+     countdown that ticks down to the exact second the lock lifts, and gives
+     a one-tap Forgot password? path so nobody is ever left staring at a
+     wall. */
+  let lockTick = null;
+  function showLockout(r) {
+    const box = $('m-lockout');
+    if (!box) { ui.toastErr(r.msg); return; }
+    const until = new Date(r.lockedUntil || Date.now() + 15 * 60000).getTime();
+    const I = RFX.icons || {};
+    box.innerHTML =
+      '<div style="display:flex;gap:12px;align-items:flex-start;">' +
+      '<span class="ic" style="color:#f0a89c;flex:none;margin-top:2px;">' + (I.clock || I.shield || '') + '</span>' +
+      '<div style="flex:1;min-width:0;">' +
+      '<div style="font-weight:600;color:#f6b9ae;margin-bottom:4px;">Sign-in is temporarily locked</div>' +
+      '<div style="color:#f0a89c;margin-bottom:10px;font-size:12px;">' +
+      'Too many failed attempts in a row — this is the safety net. Your password is untouched. You can try again in ' +
+      '<b class="mono" id="lock-timer" style="color:#f6b9ae;">' + lockFmt(until) + '</b>.' +
+      '</div>' +
+      '<button class="btn btn-ghost btn-sm" id="lock-forgot" style="font-size:12px;"><span data-icon="key"></span> Forgot password? Recover now</button>' +
+      '</div></div>';
+    show('m-lockout');
+    const t = $('lock-timer');
+    if (lockTick) clearInterval(lockTick);
+    lockTick = setInterval(function () {
+      const left = Math.max(0, until - Date.now());
+      if (t) t.textContent = lockFmt(until);
+      if (left <= 0 && lockTick) {
+        clearInterval(lockTick); lockTick = null;
+        hide('m-lockout');
+        ui.toastOk('The lock has lifted — you can sign in now.');
+      }
+    }, 1000);
+    const fg = $('lock-forgot');
+    if (fg) fg.addEventListener('click', function () { if (lockTick) { clearInterval(lockTick); lockTick = null; } hide('m-lockout'); showReset(); });
+    ui.toastErr(r.msg);
+  }
+  function lockFmt(until) {
+    const left = Math.max(0, until - Date.now());
+    const m = Math.floor(left / 60000), s = Math.floor((left % 60000) / 1000);
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+  function doSendReset() {
+    const btn = $('r-send');
+    const email = $('r-email').value.trim();
+    if (!email) { ui.toastErr('Enter the email on your enrollment.'); return; }
+    ui.busyButton(btn, true, 'Sending…');
+    let settled = false;
+    const settle = function (fn) { if (settled) return; settled = true; try { fn(); } catch (e) { console.error(e); } };
+    // the button must never stay stuck: an error still clears the busy state
+    setTimeout(function () {
+      let r = null;
+      try { r = db.requestPasswordReset(email); } catch (e) { console.error(e); r = { ok: false, msg: 'Something went wrong sending the link — please try again in a moment.' }; }
+      settle(function () {
+        ui.busyButton(btn, false);
+        const msg = $('r-msg');
+        if (!msg) return;
+        msg.hidden = false;
+        msg.style.color = r.ok ? 'var(--gold-bright)' : '#f0a89c';
+        msg.textContent = r.ok
+          ? 'If an account exists for ' + ui.esc(email) + ', a secure one-time reset link is on its way — check your email and the Mailbox on your member panel. It works for 15 minutes and can only be used once.'
+          : (r.msg || 'Could not send the reset link.');
+        if (r.ok) {
+          // land the student back on sign-in once the link is out — the
+          // confirmation has had its moment
+          setTimeout(function () {
+            try {
+              backToLogin();
+              ui.toastOk('Reset link sent — check your Mailbox, then sign in with your new password.');
+            } catch (e) { console.error(e); }
+          }, 5000);
+        }
+      });
+    }, 600);
+    setTimeout(function () { settle(function () { ui.busyButton(btn, false); }); }, 8000); // safety net
+  }
+  function doSetNewPassword() {
+    if (!resetToken) { backToLogin(); return; }
+    const btn = $('sp-set');
+    const a = $('sp-pw').value, b = $('sp-pw2').value;
+    const msg = $('sp-msg');
+    msg.hidden = true;
+    if (a.length < 8) { msg.textContent = 'Password must be at least 8 characters.'; msg.hidden = false; return; }
+    if (a !== b) { msg.textContent = 'Passwords do not match.'; msg.hidden = false; return; }
+    ui.busyButton(btn, true, 'Setting…');
+    let settled = false;
+    const settle = function (fn) { if (settled) return; settled = true; try { fn(); } catch (e) { console.error(e); } };
+    setTimeout(function () {
+      let r = null;
+      try { r = db.resetPasswordWithToken(resetToken, a); } catch (e) { console.error(e); r = { ok: false, msg: 'Something went wrong setting the password — please request a fresh reset link.' }; }
+      settle(function () {
+        ui.busyButton(btn, false);
+        if (!r.ok) { msg.textContent = r.msg || 'That link could not be used.'; msg.hidden = false; return; }
+        // success — the token is consumed. Land on the calm branded success
+        // screen: the student chooses the moment to sign in with the new
+        // password, instead of being silently dropped back at login.
+        resetToken = null;
+        const resetEmail = (r.enr && r.enr.payment && r.enr.payment.email) || '';
+        show('screen-reset-done'); hide('screen-setpw'); hide('screen-login'); hide('screen-reset'); hide('screen-panel');
+        // reset confirmation identity — the student sees exactly whose
+        // account changed before they sign in again
+        const rid = $('rd-identity'), rname = $('rd-name'), remail = $('rd-email');
+        if (rid && r.enr) {
+          const nm = (r.enr.payment && r.enr.payment.customerName) || '';
+          if (rname) rname.textContent = nm || 'Your account';
+          if (remail) remail.textContent = resetEmail;
+          rid.hidden = false;
+        }
+        const go = $('rd-signin');
+        if (go) {
+          go.onclick = function () {
+            if (go.disabled) return;
+            ui.busyButton(go, true, 'Signing in…');
+            setTimeout(function () {
+              let login = null;
+              try { login = db.memberLogin(resetEmail, a); } catch (e) { console.error(e); login = null; }
+              ui.busyButton(go, false);
+              if (login && login.ok) {
+                enr = login.enr;
+                saveSession({ id: enr.id, token: login.token });
+                entrancePending = true;
+                try { db.checkBirthdays(); } catch (e) { console.error(e); }
+                renderPanel();
+                ui.toastOk('Password reset — welcome back.');
+              } else {
+                // the reset itself already succeeded — only the auto sign-in
+                // hit the throttle; the student can sign in manually
+                $('m-email').value = resetEmail;
+                $('m-code').value = '';
+                backToLogin();
+                ui.toastOk('Password reset — sign in with your new password.');
+              }
+            }, 120);
+          };
+        } else {
+          backToLogin();
+          ui.toastOk('Password reset — sign in with your new password.');
+        }
+      });
+    }, 500);
+    setTimeout(function () { settle(function () { ui.busyButton(btn, false); }); }, 8000); // safety net
+  }
+
+  /* SECURE YOUR ACCOUNT — the onboarding prompt after credentials are
+     issued. Shown until a password is set: reminds the student to record
+     their Student ID + password in a password manager, and makes the point
+     that staff and support can never see the password (only a secure hash
+     is stored, and recovery is self-service). */
+  function passwordCard() {
+    if (!enr || db.hasPassword(enr)) return '';
+    const I = RFX.icons || {};
+    // demo / trial / coupon prospects see the option — it exists — but feint
+    // and locked: a password is a privilege for real enrolled students. The
+    // card stays honest ("it's there for you later"), the fields stay dead,
+    // and clicking explains in a calm voice. The founder is always exempt.
+    const demoLocked = db.canSetPassword ? !db.canSetPassword(enr) : false;
+    const cardBody = demoLocked
+      ? '<p class="small" style="margin-bottom:12px;color:var(--muted);line-height:1.6;">Setting a password is reserved for <b style="color:var(--text);">enrolled students</b>. You\'re on a demo pass — your <b style="color:var(--text);">Student Code (' + ui.esc(enr.studentCode || enr.studentId || '') + ')</b> signs you in. When you enrol for real, you\'ll secure your account right here.</p>' +
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">' +
+        '<div class="field" style="flex:1;min-width:170px;margin:0;"><label style="font-size:10px;">Password</label>' +
+        '<input class="input" id="pw-set1" type="password" placeholder="At least 8 characters" autocomplete="new-password" disabled></div>' +
+        '<div class="field" style="flex:1;min-width:170px;margin:0;"><label style="font-size:10px;">Confirm</label>' +
+        '<input class="input" id="pw-set2" type="password" placeholder="Repeat your password" autocomplete="new-password" disabled></div>' +
+        '<button class="btn btn-ghost btn-sm" style="opacity:0.55;cursor:not-allowed;" onclick="RFX.memberSetPassword()">' + (I.lock || '') + ' Set password</button></div>' +
+        '<div class="small" id="pw-msg" hidden style="margin-top:10px;font-size:11px;"></div>' +
+        '<p class="small faint" style="margin-top:10px;">Your Student Code / Student ID signs you in during your demo — no password needed.</p>'
+      : '<p class="small" style="margin-bottom:12px;color:var(--muted);line-height:1.6;">Record your <b style="color:var(--text);">Student ID (' + ui.esc(enr.studentId || '') + ')</b> and a password you choose, in a password manager or another secure place. Reality FX staff and support can <b>never</b> see your password — the system only stores a secure hash, and recovery is always self-service through Forgot password?.</p>' +
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">' +
+        '<div class="field" style="flex:1;min-width:170px;margin:0;"><label style="font-size:10px;">Password</label>' +
+        '<input class="input" id="pw-set1" type="password" placeholder="At least 8 characters" autocomplete="new-password"></div>' +
+        '<div class="field" style="flex:1;min-width:170px;margin:0;"><label style="font-size:10px;">Confirm</label>' +
+        '<input class="input" id="pw-set2" type="password" placeholder="Repeat your password" autocomplete="new-password"></div>' +
+        '<button class="btn btn-gold btn-sm" onclick="RFX.memberSetPassword()">' + (I.check || '') + ' Set password</button></div>' +
+        '<div class="small" id="pw-msg" hidden style="margin-top:10px;font-size:11px;"></div>' +
+        '<p class="small faint" style="margin-top:10px;">Until you set one, your Student Code / Student ID still signs you in.</p>';
+    return '<div class="card" id="password-card" style="border-color:rgba(212,175,55,0.45);' + (demoLocked ? 'opacity:0.78;' : '') + '">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' +
+      '<span class="ic" style="color:var(--gold-bright);">' + (I.lock || '') + '</span>' +
+      '<span class="eyebrow muted" style="margin-bottom:0;">Secure your account</span>' +
+      '<span class="pill" style="font-size:9px;margin-left:auto;border-color:rgba(212,175,55,0.4);color:#c9b57a;" title="Available once you enrol">' + (demoLocked ? 'demo · locked' : 'recommended') + '</span></div>' +
+      cardBody +
+      '</div>';
+  }
+  window.RFX.memberSetPassword = function () {
+    if (!enr) return;
+    // demo students: the option is visible but never usable — explain calmly
+    if (db.canSetPassword && !db.canSetPassword(enr)) {
+      ui.toastWarn('Setting a password is reserved for enrolled students. Your demo signs you in with your Student Code — secure your account when you enrol for real.');
+      return;
+    }
+    const p1 = document.getElementById('pw-set1'), p2 = document.getElementById('pw-set2'), msg = document.getElementById('pw-msg');
+    if (!p1 || !p2) return;
+    const a = p1.value, b = p2.value;
+    const showMsg = function (txt, ok) { if (msg) { msg.hidden = false; msg.style.color = ok ? '#7ee2a4' : '#f0a89c'; msg.textContent = txt; } };
+    if (a.length < 8) return showMsg('Password must be at least 8 characters.', false);
+    if (a !== b) return showMsg('Passwords do not match.', false);
+    const r = db.setStudentPassword(enr, a);
+    if (r.ok) {
+      p1.value = ''; p2.value = '';
+      showMsg('Password set — from now on you sign in with your email and password. Keep it recorded somewhere secure.', true);
+      setTimeout(function () { renderContent(); }, 1800);
+    } else showMsg(r.msg || 'Could not set the password.', false);
+  };
 
   /* ---------------- panel ---------------- */
   let panelIv = null;
@@ -294,7 +505,7 @@
     return '<div class="card" id="enroll-more-card"><div class="eyebrow muted" style="margin-bottom:10px;">Enroll in another course</div>' +
       '<p class="small" style="margin-bottom:12px;">You\'re already verified — no re-registration, no forms. Pick a course and pay from your RFX balance; it\'s added to your identity and your Academy access updates instantly.</p>' +
       '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;">' +
-      '<span class="serif gold" style="font-size:24px;font-weight:600;">' + db.money(usable, 'R') + '</span>' +
+      '<span class="num gold" style="font-size:24px;">' + db.money(usable, 'R') + '</span>' +
       '<span class="small faint">spendable balance</span></div>' +
       (courses.length ? rows : '<p class="small faint">No courses in the catalog yet — the team adds them on the Credit &amp; Refunds page.</p>') +
       '<p class="small faint" style="margin-top:12px;">Paying by card instead? The website checkout does that — use your wallet here for instant, fee-free enrollment.</p></div>';
@@ -316,11 +527,14 @@
   function renderContent() {
     const I = RFX.icons || {};
     $('mp-content').innerHTML =
-      (db.isFoundersDay() || enr.demoPass ? foundersDayCard() : '') + (db.isFounder(enr) ? masterKeyCard() : '') + notificationsCard() + supportCard() + mailboxCard() + identityCard() + trustCard() + prepGuideCard() + coursesCard() + vitalsCard() + accessCard() + walletCard() + referralCard() + spendCard() + enrollMoreCard() + merchCard() + journeyCalCard() + machineryCard();
+      (db.isFoundersDay() || enr.demoPass ? foundersDayCard() : '') + (db.isFounder(enr) ? masterKeyCard() : '') + notificationsCard() + supportCard() + mailboxCard() + identityCard() + passwordCard() + trustCard() + prepGuideCard() + coursesCard() + vitalsCard() + accessCard() + walletCard() + referralCard() + spendCard() + enrollMoreCard() + merchCard() + journeyCalCard() + machineryCard();
     // the Academy link probes once per render (async, never blocks the panel)
     if (enr && (enr.state === 'ACTIVE' || enr.state === 'RFX_OS_CONFIRMED')) {
       probeOs(null, null);
     }
+    // the gate line in the Machinery card answers live — the same endpoint
+    // the OS Cloud Function calls before issuing any session (FOR-LEE §9.62)
+    probeGate();
     let maxEntranceDelay = 0;
     if (entrancePending) {
       entrancePending = false;
@@ -439,22 +653,27 @@
     const unread = mine.filter(m => !m.read).length;
     const rows = mine.slice(0, 3).map(m => {
       const kb = MAIL_KIND[m.kind] || [m.kind || 'Message', ''];
-      return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">' +
-        (m.read
-          ? '<span class="small" style="color:var(--faint);">' + ui.esc(m.subject) + '</span>'
-          : '<span class="small" style="color:var(--gold-bright);font-weight:600;">' + ui.esc(m.subject) + '</span>') +
-        '<span class="pill ' + kb[1] + '" style="font-size:9px;">' + kb[0] + '</span>' +
-        '<span class="small faint" style="margin-left:auto;">' + ui.fmtRelative(m.sentAt) + '</span></div>';
+      const un = !m.read;
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">' +
+        '<span class="ic" style="flex:none;color:' + (un ? 'var(--gold-bright)' : 'var(--faint)') + ';">' + (I.doc || '') + '</span>' +
+        '<div style="flex:1;min-width:0;">' +
+        '<div class="small" style="color:' + (un ? 'var(--text)' : 'var(--faint)') + ';font-weight:' + (un ? '600' : '400') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + ui.esc(m.subject) + '</div>' +
+        '<div class="small faint" style="font-size:10px;">' + ui.esc(String(m.to || '').split('@')[0] || '') + ' &middot; ' + ui.fmtRelative(m.sentAt) + '</div></div>' +
+        '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex:none;">' +
+        '<span class="pill ' + kb[1] + '" style="font-size:8px;">' + kb[0] + '</span>' +
+        (un ? '<span class="small gold" style="font-size:9px;">new</span>' : '') +
+        '</div></div>';
     }).join('');
     return '<div class="card" id="mailbox-card" style="cursor:pointer;" onclick="RFX.memberOpenMailbox()" title="Open your official inbox">' +
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
-      '<span class="ic" style="color:var(--gold-bright);">' + (I.inbox || '') + '</span>' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">' +
+      '<span class="ic" style="color:var(--gold-bright);">' + (I.mail || I.inbox || '') + '</span>' +
       '<span class="eyebrow muted" style="margin-bottom:0;">Mailbox</span>' +
       (unread ? '<span class="pill gold" style="font-size:9px;">' + unread + ' unread</span>' : '') +
       '<span class="small" style="margin-left:auto;color:var(--gold);">&rarr;</span></div>' +
       (rows || '<p class="small faint">Nothing here yet — your invoice, registration link and Academy announcements will land here.</p>') +
-      '<div style="margin-top:10px;"><button class="btn btn-gold btn-sm" style="width:100%;" onclick="event.stopPropagation();RFX.memberOpenMailbox()">' + (I.mail || '') + ' Open your mailbox</button></div>' +
-      '<p class="small faint" style="margin-top:8px;">The only channel the Academy uses for official notices. Every message can be downloaded as a file.</p></div>';
+      '<div style="margin-top:12px;"><button class="btn btn-gold btn-sm" style="width:100%;" onclick="event.stopPropagation();RFX.memberOpenMailbox()">' + (I.mail || I.inbox || '') + ' Open your mailbox</button></div>' +
+      '<p class="small faint" style="margin-top:9px;">The only channel the Academy uses for official notices.</p>' +
+      '<p class="small faint" style="margin-top:2px;">Every message can be downloaded as a file.</p></div>';
   }
   function mailListPane(mine) {
     const I = RFX.icons || {};
@@ -725,7 +944,7 @@
     }).join('');
     return '<div class="card"><div class="eyebrow muted" style="margin-bottom:10px;">Spend your credit</div>' +
       '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;">' +
-      '<span class="serif gold" style="font-size:26px;font-weight:600;">' + db.money(usable, w.currency) + '</span>' +
+      '<span class="num gold" style="font-size:26px;">' + db.money(usable, w.currency) + '</span>' +
       '<span class="small faint">spendable now (expired credits excluded)</span></div>' +
       '<div style="margin-bottom:6px;">' + rows + '</div>' +
       '<div style="display:flex;gap:8px;margin-top:12px;">' +
@@ -751,17 +970,29 @@
   function identityCard() {
     const I = RFX.icons || {};
     const p = enr.payment;
+    const id = enr.studentId || '—';
+    const idRows = [
+      { ic: I.user || '', lab: 'Student ID', val: '<span style="font-family:ui-monospace,monospace;">' + ui.esc(id) + '</span>' },
+      { ic: I.book || '', lab: 'Course', val: ui.esc(p.course) },
+      { ic: I.card || '', lab: 'Paid', val: db.money(p.price, p.currency) + ' <span class="pill ok" style="font-size:8px;">paid</span>' },
+      { ic: I.calendar || '', lab: 'Enrolled', val: db.fmtDateShort(enr.createdAt) },
+    ];
+    const detailRows = idRows.map(r =>
+      '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">' +
+      '<span class="ic" style="flex:none;color:var(--gold-bright);">' + r.ic + '</span>' +
+      '<span class="small faint" style="width:70px;flex:none;font-size:9px;letter-spacing:0.12em;">' + r.lab + '</span>' +
+      '<span class="small" style="color:var(--text);margin-left:auto;text-align:right;">' + r.val + '</span></div>'
+    ).join('');
+    const foot = db.isFounder(enr)
+      ? '<div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border:1px solid var(--border-gold);border-radius:10px;background:linear-gradient(90deg,rgba(212,175,55,0.09),transparent);">' +
+        '<span class="small gold" style="font-weight:700;letter-spacing:0.1em;">FOUNDER &middot; LIFETIME ACCESS</span>' +
+        '<span class="life-bar" title="Master key — never expires" style="width:90px;"><span class="life-bar-fill" style="--v:100%;background:linear-gradient(90deg,#8f6f1f,#d4af37,#f0d98c);"></span></span></div>'
+      : demoCountdownBlock();
     return '<div class="card card-gold">' +
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><div class="eyebrow" style="margin:0;">Your identity</div>' + tierBadge() + '</div>' +
-      '<div class="id-chip">' + (enr.studentId || '—') + '</div>' +
-      '<div class="small" style="letter-spacing:0.18em;text-transform:uppercase;color:var(--faint);">Student ID</div>' +
-      '<dl class="kv" style="margin-top:14px;">' +
-      '<dt>Course</dt><dd>' + ui.esc(p.course) + '</dd>' +
-      '<dt>Paid</dt><dd>' + db.money(p.price, p.currency) + ' · <span class="pill ok" style="font-size:9px;">paid</span></dd>' +
-      '<dt>Enrolled</dt><dd>' + db.fmtDateShort(enr.createdAt) + '</dd>' +
-      (enr.registration && enr.registration.personal && enr.registration.personal.country ? '<dt>Country</dt><dd>' + ui.esc(enr.registration.personal.country) + '</dd>' : '') +
-      '</dl>' +
-      (enr.demoPass ? demoCountdownBlock() : '') +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><div class="eyebrow" style="margin:0;color:var(--gold-bright);">Your identity</div>' + tierBadge() + '</div>' +
+      '<div class="id-chip" style="border-bottom:1px solid var(--border);padding-bottom:12px;width:100%;">' + id + '</div>' +
+      '<div style="margin-top:4px;">' + detailRows + '</div>' +
+      foot +
       '</div>';
   }
 
@@ -914,6 +1145,32 @@
         .catch(function () { clearTimeout(timer); done(false); });
     } catch (e) { done(false); }
   }
+  /* THE GATE — System A's own door (FOR-LEE §9.62). The Machinery card's
+     gate line probes the same endpoint the OS Cloud Function calls before
+     issuing any session: {systemA}/api/gate?email=… . A live answer, never
+     a staged label — if the server is unreachable the line says so plainly. */
+  let gateProbeAt = 0;
+  function probeGate() {
+    const lab = document.getElementById('mach-gate');
+    if (!lab || !enr) return;
+    const nowMs = Date.now();
+    if (nowMs - gateProbeAt < 8000) return; // once per ~8s, never per 2.5s poll
+    gateProbeAt = nowMs;
+    const email = (enr.payment && enr.payment.email) || '';
+    const t0 = performance.now();
+    const settle = (txt) => { if (lab) { lab.innerHTML = txt; lab.title = 'The gate answers from System A\'s own throttle record — the same record the sign-in screen enforces.'; } };
+    try {
+      fetch('/api/gate?email=' + encodeURIComponent(email), { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(function (g) {
+          const ms = (performance.now() - t0).toFixed(1);
+          settle((g && g.locked)
+            ? '<span style="color:#f0a89c;">locked</span> · <span class="faint">' + ms + ' ms</span> — try again after the countdown, or use Forgot password?'
+            : '<span style="color:#7ee2a4;">open</span> · <span class="faint">' + ms + ' ms</span> — your identity is cleared');
+        })
+        .catch(function () { settle('<span style="color:#c9b57a;">unreachable</span> — local read stands in'); });
+    } catch (e) { settle('<span style="color:#c9b57a;">unreachable</span> — local read stands in'); }
+  }
   function accessCard() {
     const I = RFX.icons || {};
     // The Academy entry point (derived once, in db.osIndexUrl). Passing ?sid=
@@ -1011,7 +1268,7 @@
       '<span style="display:flex;align-items:center;gap:9px;width:100%;"><span class="ic" style="color:var(--gold-bright);">' + d.ic + '</span>' +
       '<b style="font-size:13px;color:var(--text);">' + d.t + '</b></span>' +
       '<span class="small faint" style="font-size:10.5px;line-height:1.45;">' + d.d + '</span></a>').join('');
-    return '<div class="card" style="grid-column:1/-1;border-color:rgba(212,175,55,0.45);background:linear-gradient(135deg,rgba(212,175,55,0.06),rgba(0,0,0,0) 55%);">' +
+    return '<div class="card mk-overview" style="grid-column:1/-1;border-color:rgba(212,175,55,0.45);background:linear-gradient(135deg,rgba(212,175,55,0.06),rgba(0,0,0,0) 55%);">' +
       '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">' +
       '<span class="ic" style="color:var(--gold-bright);">' + (I.key || I.lock || '') + '</span>' +
       '<span class="eyebrow gold" style="margin-bottom:0;">The Master Key — founder overview</span></div>' +
@@ -1048,9 +1305,9 @@
       '<input class="input" id="ref-link" readonly value="' + ui.esc(link) + '" style="flex:1;min-width:200px;font-size:12px;">' +
       '<button class="btn btn-ghost btn-sm" data-ref-copy>Share</button></div>' +
       '<div style="display:flex;gap:18px;margin-bottom:12px;flex-wrap:wrap;">' +
-      '<div><span class="serif gold" style="font-size:22px;font-weight:600;">' + db.money(st.paidAmount, 'R') + '</span><div class="small faint">paid to wallet</div></div>' +
-      '<div><span class="serif" style="font-size:22px;font-weight:600;color:var(--text);">' + db.money(st.pendingAmount, 'R') + '</span><div class="small faint">pending vesting</div></div>' +
-      '<div><span class="serif" style="font-size:22px;font-weight:600;color:var(--text);">' + st.active + '</span><div class="small faint">active referrals</div></div></div>' +
+      '<div><span class="num gold" style="font-size:22px;">' + db.money(st.paidAmount, 'R') + '</span><div class="small faint">paid to wallet</div></div>' +
+      '<div><span class="num" style="font-size:22px;color:var(--text);">' + db.money(st.pendingAmount, 'R') + '</span><div class="small faint">pending vesting</div></div>' +
+      '<div><span class="num" style="font-size:22px;color:var(--text);">' + st.active + '</span><div class="small faint">active referrals</div></div></div>' +
       '<div class="small faint" style="margin-bottom:4px;">Tier ladder — more students, higher split:</div>' + tierRows +
       '<div class="small" style="margin-top:10px;color:var(--muted);">Earnings arrive in your RFX wallet once the student you brought in is <b style="color:var(--text);">fully locked in</b> — they must survive the ' + ((db.getSettings().referral && db.getSettings().referral.vestingDays) || 30) + '-day refund window. Commissions are paid only on students who are truly committed — that is what keeps every rand protected and the Academy strong.</div>' +
       rows + '</div>';
@@ -1096,7 +1353,7 @@
       '<div class="eyebrow muted" style="margin-bottom:10px;">RFX account credit</div>' +
       '<div class="mono gold" style="font-size:14px;letter-spacing:1px;margin-bottom:4px;">' + w.walletNo + ' <span class="small faint" style="letter-spacing:0;">— your wallet number · quote it at ceremonies &amp; giveaways</span></div>' +
       '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px;">' +
-      '<span class="serif gold" style="font-size:30px;font-weight:600;">' + db.money(sum.balance, w.currency) + '</span>' +
+      '<span class="num gold" style="font-size:30px;">' + db.money(sum.balance, w.currency) + '</span>' +
       '<span class="small faint">balance</span></div>' + expiredLine +
       (sum.expiringSoon > 0 ? '<p class="small" style="color:var(--warn);margin-bottom:10px;"><b>' + db.money(sum.expiringSoon, w.currency) + '</b> expires within 60 days — use it before it lapses.</p>' : '') +
       (db.spendable(enr.payment.email) >= 50
@@ -1158,15 +1415,32 @@
       .filter(e => e.date && e.date >= new Date().toISOString().slice(0, 10))
       .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
       .slice(0, 5);
+    // demo preview — founder walkthroughs and tours get a seeded 'Coming up'
+    // so the planner reads as alive (study rhythm, briefings, dates all
+    // flowing) without writing a single fake event to the store. Marked DEMO.
+    if ((db.isFounder(enr) || enr.demoPass) && upcoming.length < 4) {
+      const today = new Date();
+      const plan0 = (T.plan && T.plan[0]) || 'Review this week\'s lesson once';
+      [
+        { off: 2, title: 'Study block — ' + plan0, kind: 'demo' },
+        { off: 5, title: 'Journal your best trade — one entry', kind: 'suggest' },
+        { off: 9, title: 'Prep check — your 2026 guide is in the Mailbox', kind: 'demo' },
+      ].forEach(function (s) {
+        const d = new Date(today); d.setDate(d.getDate() + s.off);
+        upcoming.push({ date: d.toISOString().slice(0, 10), title: s.title, kind: s.kind });
+      });
+      upcoming.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    }
     const rows = upcoming.length
       ? upcoming.map(e => {
         const d = new Date(e.date + 'T00:00:00');
         const dd = String(d.getDate()).padStart(2, '0');
         const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const pill = e.kind === 'academy' ? ['gold', 'Academy'] : e.kind === 'suggest' ? ['info', 'Suggested'] : e.kind === 'demo' ? ['', 'Demo'] : ['', 'Mine'];
         return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);">' +
           '<span class="mono" style="font-size:10px;color:var(--gold-bright);width:34px;flex:none;">' + dd + '/' + mm + '</span>' +
           '<span class="small" style="color:var(--text);">' + ui.esc(e.title) + '</span>' +
-          '<span class="pill ' + (e.kind === 'academy' ? 'gold' : e.kind === 'suggest' ? 'info' : '') + '" style="font-size:9px;margin-left:auto;">' + (e.kind === 'academy' ? 'Academy' : e.kind === 'suggest' ? 'Suggested' : 'Mine') + '</span></div>';
+          '<span class="pill ' + pill[0] + '" style="font-size:9px;margin-left:auto;">' + pill[1] + '</span></div>';
       }).join('')
       : '<p class="small faint">No dates lined up yet — your planner is ready when you are.</p>';
     // the tier's study rhythm — the wider card earns it with the plan preview
@@ -1198,23 +1472,23 @@
         ? '<button class="btn btn-gold btn-sm" style="width:100%;margin-top:9px;" onclick="event.stopPropagation();RFX.memberSessionDone()">' + (I.check || '') + ' Mark today\'s session done</button>'
         : (st.today && st.today.done ? '<div class="small" style="color:#7ee2a4;margin-top:9px;font-size:11px;">✓ Today\'s session complete — well done.</div>' : '')) +
       '</div>';
-    return '<div class="card journey-wide" id="journey-cal-card" style="cursor:pointer;" onclick="RFX.memberJourneyCal()" title="Open your journey calendar">' +
+    return '<div class="card jcal-card" id="journey-cal-card" style="cursor:pointer;" onclick="RFX.memberJourneyCal()" title="Open your journey calendar">' +
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
       '<span class="ic" style="color:var(--gold-bright);">' + (I.calendar || '') + '</span>' +
       '<span class="eyebrow muted" style="margin-bottom:0;">Your journey calendar</span>' +
       '<span class="pill gold" style="font-size:9px;margin-left:auto;">' + tierLabel + '</span></div>' +
-      '<div style="display:grid;grid-template-columns:1.5fr 1fr 1.2fr;gap:18px;">' +
-      '<div>' +
+      '<div class="jcal-cols">' +
+      '<div class="jcal-panel first">' +
       '<div class="small faint" style="margin-bottom:4px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;">Coming up</div>' +
       rows +
       '</div>' +
-      '<div style="border-left:1px solid var(--border);padding-left:16px;">' +
+      '<div class="jcal-panel">' +
       '<div class="small faint" style="margin-bottom:4px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;">Study rhythm</div>' +
       '<div class="small" style="color:var(--gold-bright);font-size:11px;padding:4px 0 2px;">' + ui.esc(T.cadence || '') + '</div>' +
       planRows +
       stBlock +
       '</div>' +
-      '<div style="border-left:1px solid var(--border);padding-left:16px;">' +
+      '<div class="jcal-panel">' +
       '<div class="small faint" style="margin-bottom:4px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;">Updates &amp; briefings</div>' +
       (subsOn < totalTypes ? '<div class="small faint" style="font-size:9px;margin-bottom:2px;">' + subsOn + ' of ' + totalTypes + ' feeds on — manage in your planner</div>' : '') +
       briefRows +
@@ -1339,14 +1613,97 @@
      + self-test are cached for 30s so the 2.5s panel poll never re-runs
      them; the op timings are measured live on every render. */
   let machineryCache = null, machineryCachedAt = 0;
+  let machineryWarmIv = null; // in-flight warm-up timer (never two at once)
+  /* The shell the Machinery card paints FIRST — before the audit/self-test
+     numbers are ready. Same card, honest placeholders, then the background
+     warm-up patches the numbers line in place (id machinery-nums). First
+     paint and the 5-min refresh are always instant. */
+  function machineryShellHtml() {
+    const I = RFX.icons || {};
+    const m = db.storageMeter();
+    const headroom = Math.max(0, Math.round((1 - m.percent / 100) * 1000) / 10);
+    const list = db.enrollments();
+    const probe = list.find(function (e) { return e.studentId; });
+    let t0 = performance.now();
+    if (probe) { for (let k = 0; k < 100; k++) db.byId(probe.id); }
+    let t1 = performance.now();
+    const lookupMs = probe ? ((t1 - t0) / 100) : 0;
+    t0 = performance.now(); db.storageMeter(); t1 = performance.now();
+    const storeMs = t1 - t0;
+    const pipe = [['Payment', true], ['Enrollment', true], ['Identity', true], ['Handshake', true], ['Academy', true]].map(function (p) {
+      return '<span style="display:inline-flex;align-items:center;gap:6px;color:#7ee2a4;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;font-weight:600;">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><polyline points="20 6 9 17 4 12"/></svg>' + p[0] + '</span>';
+    }).join('<span style="color:rgba(255,255,255,0.25);margin:0 2px;">→</span>');
+    const ws = db.wallets();
+    const inCirculation = ws.reduce(function (s, w) { return s + (w.balance || 0); }, 0);
+    const messagesSent = db.emails().length;
+    const eventsOnRecord = db.securityEvents().length;
+    const openThreads = db.supportThreads().length;
+    const queue = db.merchOrders().filter(function (o) { return o.status === 'collecting' || o.status === 'packing'; }).length;
+    const metrics = [
+      { ic: I.wallet || '', v: db.money(inCirculation), l: 'credit in student wallets' },
+      { ic: I.mail || '', v: messagesSent, l: 'official messages delivered' },
+      { ic: I.shield || '', v: eventsOnRecord, l: 'security events on record' },
+      { ic: I.users || '', v: openThreads, l: 'open conversations · the human line' },
+      { ic: I.cart || '', v: queue, l: 'orders in the fulfilment queue' },
+      { ic: I.cpu || '', v: m.kb + ' KB', l: 'store footprint on this device' },
+    ].map(function (x) {
+      return '<div style="display:flex;align-items:center;gap:9px;min-width:170px;">' +
+        '<span class="ic" style="color:var(--gold-bright);flex:none;">' + x.ic + '</span>' +
+        '<div><div class="mono" style="font-size:14px;color:var(--text);line-height:1.15;">' + x.v + '</div>' +
+        '<div class="small faint" style="font-size:10px;letter-spacing:0.05em;">' + x.l + '</div></div></div>';
+    }).join('');
+    return '<div class="card machinery" style="grid-column:1/-1;border-color:rgba(212,175,55,0.35);">' +
+      '<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:6px;">' +
+      '<span class="ic" style="color:var(--gold-bright);margin-top:2px;">' + (I.shieldCheck || I.shield || '') + '</span>' +
+      '<div style="min-width:0;">' +
+      '<span class="eyebrow gold" style="margin-bottom:0;">The Machinery</span>' +
+      '<div class="small" style="color:var(--muted);margin-top:2px;letter-spacing:0.03em;">keeping your Academy running</div>' +
+      '</div></div>' +
+      '<p class="small faint" style="margin-bottom:16px;">The engine room behind your studies — measured live, shown honestly. Every number below is computed by the system right now; nothing is staged.</p>' +
+      '<div class="mach-rings">' +
+      ui.trustRingHTML(100, { cap: 'checks' }) + ui.trustRingHTML(100, { cap: 'security' }) + ui.trustRingHTML(100, { cap: 'cyber' }) + ui.trustRingHTML(100, { cap: 'headroom', pctText: '∞', title: 'Production capacity is effectively unlimited — this demo runs on a small local store, where ' + headroom + '% of the room is still free.' }) +
+      '</div>' +
+      '<div class="small" style="margin-bottom:8px;" id="machinery-nums"><b style="color:var(--text);">checking…</b></div>' +
+      '<div class="small" style="margin-bottom:8px;">Identity lookup <b class="mono gold">' + (lookupMs < 0.01 ? '&lt;0.01' : lookupMs.toFixed(2)) + ' ms</b> · store read <b class="mono gold">' + storeMs.toFixed(2) + ' ms</b> — measured on this device, this second</div>' +
+      '<div class="small" style="margin-bottom:8px;">The gate <b class="mono gold" id="mach-gate">checking…</b> — System A holds the door; the Academy only follows</div>' +
+      '<div class="small faint" style="margin-bottom:18px;">Cyber defence runs around the clock — the system attacks itself the way an intruder would, and every single hit is defended and recorded. Every rand reconciles · every Student Code is unique · 35 kinds of security events watched</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px 26px;border-top:1px solid rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.08);padding:14px 0;margin:4px 0 18px;">' + metrics + '</div>' +
+      '<div class="eyebrow muted" style="margin-bottom:8px;">Your journey through the machine</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:18px;">' + pipe + '</div>' +
+      '<div class="small faint" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;">' +
+      '<div style="margin-bottom:6px;">Capacity headroom <b class="num gold" style="font-size:15px;">∞</b> — built to hold your whole year and the years after. Student numbers stay private while we grow — every student is treated equal here ' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:13px;height:13px;vertical-align:-2px;color:var(--gold);"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>' +
+      '<div>Founder\'s Day — ' + db.foundersDayLabel() + '. ' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:13px;height:13px;vertical-align:-2px;color:var(--gold);"><path d="M12 2c1.5 1.8 2.2 3.4 2.2 5.1a2.2 2.2 0 0 1-4.4 0C9.8 5.4 10.5 3.8 12 2z"/><path d="M12 9.5v7M7 20c1.2-1.4 3.1-2.2 5-2.2s3.8.8 5 2.2"/><path d="M5 11a2.5 2.5 0 0 1 0 5M19 11a2.5 2.5 0 0 0 0 5"/></svg>' +
+      '</div>' +
+      '</div></div>';
+  }
   function machineryCard() {
     const I = RFX.icons || {};
     const nowMs = Date.now();
-    // 5-minute cache: fullAudit deep-clones the whole world, so re-running it
-    // every 2.5s poll would freeze the panel as the student body grows.
+    // 5-minute cache, computed OFF the critical path: the audit+self-test is
+    // heavy, so the first render shows the shell instantly and the numbers
+    // fill in the moment the background warm-up finishes (a few hundred ms
+    // later, or instantly on every later render thanks to the cache). First
+    // paint and the 5-minute refresh therefore NEVER block the main thread.
     if (!machineryCache || nowMs - machineryCachedAt > 300000) {
-      machineryCache = { audit: db.fullAudit(), self: db.securitySelfTest(), at: nowMs };
-      machineryCachedAt = nowMs;
+      if (!machineryWarmIv) {
+        machineryWarmIv = setTimeout(function () {
+          machineryWarmIv = null;
+          try {
+            machineryCache = { audit: db.fullAudit(), self: db.securitySelfTest(), at: Date.now() };
+            machineryCachedAt = Date.now();
+          } catch (e) { console.error('Machinery warm-up failed.', e); }
+          // patch the numbers in place — the student sees them appear
+          const box = document.getElementById('machinery-nums');
+          if (box && machineryCache) {
+            const a = machineryCache.audit, s = machineryCache.self;
+            box.innerHTML = '<b style="color:var(--text);">' + a.passed + '/' + a.total + '</b> system checks green · <b style="color:var(--text);">' + s.filter(function (x) { return x.pass; }).length + '/' + s.length + '</b> security attacks defended';
+          }
+        }, 30); // after this paint — the shell is already on screen
+      }
+      return machineryShellHtml();
     }
     const a = machineryCache.audit, s = machineryCache.self;
     const m = db.storageMeter();
@@ -1399,18 +1756,21 @@
       '</div></div>' +
       '<p class="small faint" style="margin-bottom:16px;">The engine room behind your studies — measured live, shown honestly. Every number below is computed by the system right now; nothing is staged.</p>' +
       '<div class="mach-rings">' +
-      ui.trustRingHTML(100, { cap: 'checks' }) + ui.trustRingHTML(100, { cap: 'security' }) + ui.trustRingHTML(100, { cap: 'cyber' }) + ui.trustRingHTML(headroom, { cap: 'headroom' }) +
+      ui.trustRingHTML(100, { cap: 'checks' }) + ui.trustRingHTML(100, { cap: 'security' }) + ui.trustRingHTML(100, { cap: 'cyber' }) + ui.trustRingHTML(100, { cap: 'headroom', pctText: '∞', title: 'Production capacity is effectively unlimited — this demo runs on a small local store, where ' + headroom + '% of the room is still free.' }) +
       '</div>' +
-      '<div class="small" style="margin-bottom:8px;"><b style="color:var(--text);">' + a.passed + '/' + a.total + '</b> system checks green · <b style="color:var(--text);">' + s.filter(function (x) { return x.pass; }).length + '/' + s.length + '</b> security attacks defended</div>' +
+      '<div class="small" style="margin-bottom:8px;" id="machinery-nums"><b style="color:var(--text);">' + a.passed + '/' + a.total + '</b> system checks green · <b style="color:var(--text);">' + s.filter(function (x) { return x.pass; }).length + '/' + s.length + '</b> security attacks defended</div>' +
       '<div class="small" style="margin-bottom:8px;">Identity lookup <b class="mono gold">' + (lookupMs < 0.01 ? '&lt;0.01' : lookupMs.toFixed(2)) + ' ms</b> · store read <b class="mono gold">' + storeMs.toFixed(2) + ' ms</b> — measured on this device, this second</div>' +
+      '<div class="small" style="margin-bottom:8px;">The gate <b class="mono gold" id="mach-gate">checking…</b> — System A holds the door; the Academy only follows</div>' +
       '<div class="small faint" style="margin-bottom:18px;">Cyber defence runs around the clock — the system attacks itself the way an intruder would, and every single hit is defended and recorded. Every rand reconciles · every Student Code is unique · ' + EVENT_KINDS + ' kinds of security events watched</div>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px 26px;border-top:1px solid rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.08);padding:14px 0;margin:4px 0 18px;">' + metrics + '</div>' +
       '<div class="eyebrow muted" style="margin-bottom:8px;">Your journey through the machine</div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:18px;">' + pipe + '</div>' +
       '<div class="small faint" style="border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;">' +
-      'Capacity headroom <b style="color:var(--gold-bright);">≈' + headroom + '%</b> — built to hold your whole year and the years after. ' +
-      (cr.revealed ? 'We\'re ' + cr.active.toLocaleString() + ' strong and growing.' : 'Student numbers stay private while we grow — what matters is every student is fully supported.') + ' ' +
-      '<span style="color:var(--gold);">⚜</span> Founder\'s Day — ' + db.foundersDayLabel() + '. The founder stays anonymous — the learning is the point.' +
+      '<div style="margin-bottom:6px;">Capacity headroom <b class="num gold" style="font-size:15px;">∞</b> — built to hold your whole year and the years after. Student numbers stay private while we grow — every student is treated equal here ' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:13px;height:13px;vertical-align:-2px;color:var(--gold);"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>' +
+      '<div>Founder\'s Day — ' + db.foundersDayLabel() + '. ' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:13px;height:13px;vertical-align:-2px;color:var(--gold);"><path d="M12 2c1.5 1.8 2.2 3.4 2.2 5.1a2.2 2.2 0 0 1-4.4 0C9.8 5.4 10.5 3.8 12 2z"/><path d="M12 9.5v7M7 20c1.2-1.4 3.1-2.2 5-2.2s3.8.8 5 2.2"/><path d="M5 11a2.5 2.5 0 0 1 0 5M19 11a2.5 2.5 0 0 0 0 5"/></svg>' +
+      '</div>' +
       '</div></div>';
   }
 
@@ -1476,6 +1836,22 @@
     $('m-email').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
     $('m-code').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
     $('mp-logout').addEventListener('click', doLogout);
+    // forgot-password + reset screens
+    $('m-forgot').addEventListener('click', showReset);
+    $('r-send').addEventListener('click', doSendReset);
+    $('r-back').addEventListener('click', backToLogin);
+    $('sp-back').addEventListener('click', backToLogin);
+    $('sp-set').addEventListener('click', doSetNewPassword);
+    $('r-email').addEventListener('keydown', e => { if (e.key === 'Enter') doSendReset(); });
+    $('sp-pw2').addEventListener('keydown', e => { if (e.key === 'Enter') doSetNewPassword(); });
+    // an emailed reset link lands here: member.html?reset=TOKEN — the token
+    // page is standalone (no session restore needed).
+    const rt = new URLSearchParams(location.search).get('reset');
+    if (rt) {
+      resetToken = rt;
+      show('screen-setpw'); hide('screen-login'); hide('screen-reset'); hide('screen-panel');
+      return;
+    }
     // Return trip from the Academy: RFX OS sends the student back with
     // ?email= prefilled, so they land one step from signed in. The code is
     // never carried in the URL — it stays a credential the student holds.

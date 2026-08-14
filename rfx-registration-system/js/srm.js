@@ -141,6 +141,11 @@
       (e.handoff && e.handoff.confirmedAt ? '<dt>RFX OS</dt><dd><span class="pill ok" style="font-size:9px;">handshake confirmed</span> ' + db.fmtDateShort(e.handoff.confirmedAt) + '</dd>' : '') +
       merchLine(e) + cooldownLine(e) + printLine(e) +
       '</dl>' +
+      '<div style="display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:14px;flex-wrap:wrap;">' +
+      '<span class="ic" style="color:var(--gold-bright);">' + (I.key || '') + '</span>' +
+      '<div style="flex:1;min-width:200px;"><div class="small" style="color:var(--text);font-weight:600;">Password recovery</div>' +
+      '<div class="small faint">Passwords are stored as secure hashes — staff can never see or reset one. Send the student a self-service reset link instead.</div></div>' +
+      '<button class="btn btn-ghost btn-sm" onclick="RFX.srmSendReset(\'' + e.id + '\')">' + (I.mail || '') + ' Send reset link</button></div>' +
       identityFlagLine(e) +
       trustLine(e) +
       '<div class="grid2" style="align-items:start;margin-top:10px;gap:14px;">' +
@@ -166,6 +171,17 @@
   }
 
   /* print-trust controls (exposed for inline onclick) */
+  /* staff-triggered password reset — helps a student recover access without
+     ever seeing their password: the same self-service link the student gets
+     from Forgot password?, minted by the system and sent to their email. */
+  RFX.srmSendReset = function (id) {
+    const e = db.byId(id);
+    if (!e) return;
+    const r = db.requestPasswordReset(e.payment.email);
+    ui.toastOk(r.ok
+      ? 'Reset link sent to ' + e.payment.email + ' — valid 15 minutes, single-use. It is in their Mailbox.'
+      : (r.msg || 'Could not send the reset link.'));
+  };
   RFX.srmGrantPrint = function (id) {
     const e = db.byId(id);
     if (!e) return;

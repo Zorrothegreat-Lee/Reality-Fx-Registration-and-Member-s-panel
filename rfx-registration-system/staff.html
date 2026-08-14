@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/system.css?v=20260810-61">
+<link rel="stylesheet" href="css/system.css?v=20260810-71">
 </head>
 <body class="staff-page">
 <div class="wrap">
@@ -165,11 +165,16 @@
           <div id="the-standard"></div>
         </div>
 
-        <!-- ACADEMY UPTIME — the OS-outage monitoring board -->
+        <!-- ACADEMY UPTIME — the OS-outage monitoring board + the gate -->
         <div class="card" id="os-uptime-card" style="margin-top:18px;">
           <div class="eyebrow" style="margin-bottom:6px;">Academy uptime · the power monitor</div>
-          <p class="small faint" style="margin-bottom:12px;">Every panel that watches the Academy feeds this board — one row per outage, however many eyes were on it. The lights-off state, the lights-on moment, and exactly how long the dark lasted.</p>
+          <p class="small faint" style="margin-bottom:12px;">Every panel that watches the Academy feeds this board — one row per outage, however many eyes were on it. The lights-off state, the lights-on moment, and exactly how long the dark lasted. Below it, the gate — System A's own door, probed live every refresh.</p>
           <div id="os-uptime"></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;border-radius:10px;border:1px solid rgba(212,175,55,0.28);background:rgba(212,175,55,0.05);">
+            <span class="ic" style="color:var(--gold-bright);flex:none;"><span data-icon="shieldCheck"></span></span>
+            <div style="flex:1;min-width:0;"><div class="small" style="color:var(--muted);"><b style="color:var(--text);">The gate</b> — <span id="gate-health" class="small" style="color:#c9b57a;">checking…</span></div>
+            <div class="small faint" style="margin-top:2px;">System A holds the door; the Academy only follows. If a student is locked out, the OS refuses them until the gate lifts — see FOR-LEE §9.62.</div></div>
+          </div>
         </div>
 
         <!-- ADMIN: add staff -->
@@ -197,9 +202,9 @@
   </div>
 </div>
 
-<script src="assets/icons.js?v=20260810-61"></script>
-<script src="js/db.js?v=20260810-61"></script>
-<script src="js/ui.js?v=20260810-61"></script>
-<script src="js/staff.js?v=20260810-61"></script>
+<script src="assets/icons.js?v=20260810-71"></script>
+<script src="js/db.js?v=20260810-71"></script>
+<script src="js/ui.js?v=20260810-71"></script>
+<script src="js/staff.js?v=20260810-71"></script>
 </body>
 </html>

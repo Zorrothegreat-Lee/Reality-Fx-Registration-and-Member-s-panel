@@ -802,6 +802,38 @@
       if (el.textContent === 'RFX-••••') { el.textContent = 'RFX-' + el.dataset.code; $('ap-reveal').innerHTML = I.eyeOff || I.eye || ''; }
       else { el.textContent = 'RFX-••••'; $('ap-reveal').innerHTML = I.eye || ''; }
     };
+    // secure-your-credentials prompt: set the password right where the ID and
+    // code were issued. Never stored readable — only a secure hash, so staff
+    // and support can never see or recover it. Demo / trial / coupon prospects
+    // see the option but it stays locked — a password is a real-student
+    // privilege; their Student Code carries them through the tour.
+    const pwBox = $('ap-pw');
+    if (pwBox) {
+      if (db.hasPassword(enr)) {
+        pwBox.innerHTML = '<div class="small" style="color:#7ee2a4;padding:10px 0;">✓ Password set — sign in with your email and password from now on.</div>';
+      } else if (db.canSetPassword && !db.canSetPassword(enr)) {
+        pwBox.innerHTML = '<div class="small" style="color:var(--muted);padding:10px 0;opacity:0.8;">🔒 Setting a password is reserved for enrolled students. Your demo pass signs you in with your Student Code — when you enrol for real, you\'ll secure your account right here.</div>';
+        const setPw = $('ap-setpw');
+        if (setPw) { setPw.disabled = true; setPw.style.opacity = '0.5'; setPw.style.cursor = 'not-allowed'; setPw.onclick = function () { ui.toastWarn('Setting a password is reserved for enrolled students — your demo signs you in with your Student Code.'); }; }
+        const apw1 = $('ap-pw1'), apw2 = $('ap-pw2');
+        if (apw1) apw1.disabled = true;
+        if (apw2) apw2.disabled = true;
+      } else {
+        const setPw = $('ap-setpw');
+        const msg = $('ap-pw-msg');
+        if (setPw) setPw.onclick = function () {
+          const a = $('ap-pw1').value, b = $('ap-pw2').value;
+          msg.hidden = true;
+          if (a.length < 8) { msg.textContent = 'Password must be at least 8 characters.'; msg.hidden = false; return; }
+          if (a !== b) { msg.textContent = 'Passwords do not match.'; msg.hidden = false; return; }
+          const r = db.setStudentPassword(enr, a);
+          if (r.ok) {
+            pwBox.innerHTML = '<div class="small" style="color:#7ee2a4;padding:10px 0;">✓ Password set — from now on you sign in with your email and password. Keep it recorded somewhere secure.</div>';
+            ui.toastOk('Password set — your account is secured.');
+          } else { msg.textContent = r.msg || 'Could not set the password.'; msg.hidden = false; }
+        };
+      }
+    }
     renderAccessGate();
     // while this screen is open, the OS gate unlocks itself the moment the
     // handshake lands (APPROVED → RFX_OS_CONFIRMED → ACTIVE)

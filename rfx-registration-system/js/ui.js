@@ -208,6 +208,9 @@ window.RFX = window.RFX || {};
   function trustRingHTML(score, opts) {
     opts = opts || {};
     const s = Math.max(0, Math.min(100, Number(score) || 0));
+    // opts.pctText overrides the centre figure (e.g. '∞' for production
+    // capacity) while the arc still follows the score; opts.title adds a
+    // quiet tooltip on the ring so a symbol never goes unexplained.
     const C = 2 * Math.PI * 42;
     // +0.5 epsilon keeps the flat butt caps overlapping at 100% (no hairline
     // seam at 12 o'clock) while 0% still draws nothing (offset lands exactly
@@ -236,7 +239,7 @@ window.RFX = window.RFX || {};
     // The clean RFX OS course-completion ring: a dark disc, a thin track, and a
     // single gold arc. No glow, no diamond, no shadows — deliberately identical
     // to the OS so both systems speak one design dialect.
-    return '<div class="trust-ring ' + tierCls + '">' +
+    return '<div class="trust-ring ' + tierCls + '"' + (opts.title ? ' title="' + esc(opts.title) + '"' : '') + '>' +
       '<svg viewBox="0 0 100 100"><defs>' + grads + '</defs>' +
       '<circle class="tr-disc" cx="50" cy="50" r="42"/>' +
       '<circle class="tr-track" cx="50" cy="50" r="42"/>' +
@@ -244,7 +247,7 @@ window.RFX = window.RFX || {};
       // the inline dashoffset starts empty (C) so the ring never flashes full.
       '<circle class="tr-fill" cx="50" cy="50" r="42" style="--tr:' + off.toFixed(2) + ';stroke-dasharray:' + C + ';stroke-dashoffset:' + C + ';stroke:url(#' + gradUrl + ');filter:url(#' + gid + 'f)"/>' +
       '</svg>' +
-      '<div class="tr-center"><div class="tr-pct">' + s + '%</div><div class="tr-cap">' + esc(cap) + '</div>' +
+      '<div class="tr-center"><div class="tr-pct">' + (opts.pctText || (s + '%')) + '</div><div class="tr-cap">' + esc(cap) + '</div>' +
       (s === 0 ? '<div class="tr-crit">restricted</div>' : '') +
       '</div>' +
       '</div>';

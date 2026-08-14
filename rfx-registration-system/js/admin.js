@@ -130,7 +130,7 @@
     if (!box) return;
     const f = db.regStats();
     const fmt = ms => ms == null ? '—' : (ms < 1000 ? '<1s' : (ms >= 60000 ? Math.round(ms / 60000) + 'm ' + Math.round((ms % 60000) / 1000) + 's' : Math.round(ms / 1000) + 's'));
-    const item = (v, l, extra) => '<div><span class="serif gold" style="font-size:22px;font-weight:600;">' + v + '</span><div class="small faint">' + l + '</div>' + (extra || '') + '</div>';
+    const item = (v, l, extra) => '<div><span class="num gold" style="font-size:22px;">' + v + '</span><div class="small faint">' + l + '</div>' + (extra || '') + '</div>';
     box.innerHTML =
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;">' +
       item(f.sent, 'links sent') +

@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/system.css?v=20260810-61">
+<link rel="stylesheet" href="css/system.css?v=20260810-71">
 </head>
 <body>
 <div class="wrap">
@@ -298,6 +298,15 @@
           <button id="ap-reveal" title="Reveal student code"><span data-icon="eye"></span></button>
         </div>
         <div style="color:var(--muted);font-size:12px;letter-spacing:0.2em;text-transform:uppercase;">Student code</div>
+        <div id="ap-pw" style="margin-top:22px;text-align:left;border-top:1px solid var(--border);padding-top:18px;">
+          <div class="eyebrow" style="margin-bottom:6px;">Secure your credentials</div>
+          <p class="small" style="margin-bottom:12px;color:var(--muted);line-height:1.6;">Record your Student ID and the password you choose, in a password manager or another secure place. Reality FX staff and support can <b style="color:var(--text);">never</b> see or recover your password — the system only stores a secure hash, and recovery is always self-service through <b style="color:var(--text);">Forgot password?</b>.</p>
+          <div class="field"><label>Set your password</label><input class="input" id="ap-pw1" type="password" placeholder="At least 8 characters" autocomplete="new-password"></div>
+          <div class="field"><label>Confirm password</label><input class="input" id="ap-pw2" type="password" placeholder="Repeat your password" autocomplete="new-password"></div>
+          <div class="small" id="ap-pw-msg" hidden style="margin-top:10px;font-size:11px;line-height:1.5;"></div>
+          <button class="btn btn-gold btn-sm" id="ap-setpw" style="width:100%;"><span data-icon="lock"></span> Set my password</button>
+          <p class="small faint" style="margin-top:10px;">Skip for now? You can set a password later from My RFX account — until then your Student Code still signs you in.</p>
+        </div>
         <p class="quote" style="margin:22px 0 6px;">“Your Reality FX identity has been established.<br>Your RFX OS access is ready.”</p>
         <div id="ap-lock-msg" hidden style="margin-top:20px;"></div>
         <a class="btn btn-gold" id="ap-enter" href="http://127.0.0.1:49270/os/index.html" target="_blank" style="margin-top:20px;font-size:15px;padding:15px 34px;">Enter the Academy →</a>
@@ -347,9 +356,9 @@
 </div>
 </div>
 
-<script src="assets/icons.js?v=20260810-61"></script>
-<script src="js/db.js?v=20260810-61"></script>
-<script src="js/ui.js?v=20260810-61"></script>
-<script src="js/register.js?v=20260810-61"></script>
+<script src="assets/icons.js?v=20260810-71"></script>
+<script src="js/db.js?v=20260810-71"></script>
+<script src="js/ui.js?v=20260810-71"></script>
+<script src="js/register.js?v=20260810-71"></script>
 </body>
 </html>

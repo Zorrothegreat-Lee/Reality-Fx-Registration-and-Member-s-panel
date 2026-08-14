@@ -319,7 +319,7 @@ input, select, textarea { font-family: inherit; }
 .kpi { padding: 18px 20px; }
 .kpi .kpi-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .kpi .kpi-ic { font-size: 17px; }
-.kpi .kpi-num { font-family: var(--font-serif); font-size: 30px; font-weight: 600; color: var(--gold-bright); line-height: 1; }
+.kpi .kpi-num { font-family: var(--font-ui); font-variant-numeric: tabular-nums; font-size: 28px; font-weight: 600; color: var(--gold-bright); line-height: 1; }
 .kpi .kpi-lab { margin-top: 6px; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 
 /* ---------- Tables ---------- */
@@ -563,15 +563,39 @@ body.staff-page .grid2 .card::-webkit-scrollbar-thumb { background: rgba(212,175
 .srm-scroll::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.35); border-radius: 99px; }
 @media (max-width: 900px) { .member-grid { grid-template-columns: 1fr; } }
 .member-grid .span-full { grid-column: 1 / -1; }
-/* The journey calendar card earns two tracks on desktop but must collapse to
-   one on narrow grids — an inline span:2 would force a ghost implicit track
-   (50px) once the grid drops to 1fr, squeezing every card beside it. */
-.member-grid .journey-wide { grid-column: span 2; }
-@media (max-width: 900px) { .member-grid .journey-wide { grid-column: auto; } }
-.id-chip {
-  display: inline-block; font-family: var(--font-serif); font-size: 30px; font-weight: 700;
-  color: var(--gold-bright); letter-spacing: 2px; margin: 10px 0 2px;
+/* The journey calendar card is ONE standard card on the 3-track grid (it sits
+   right beside the Merch card, exactly like every other neighbour) and earns
+   the full row only in the 2-track band where a lone card would otherwise
+   leave a dead cell. Its inner 3-panel layout is container-query aware: on a
+   narrow card the panels stack cleanly instead of squashing text. */
+.member-grid .jcal-card { container-type: inline-size; }
+@media (min-width: 901px) and (max-width: 1179px) { .member-grid .jcal-card { grid-column: span 2; } }
+@media (max-width: 900px) { .member-grid .jcal-card { grid-column: auto; } }
+.jcal-cols { display: grid; grid-template-columns: 1.5fr 1fr 1.2fr; gap: 18px; }
+.jcal-cols .jcal-panel { min-width: 0; }
+.jcal-cols .jcal-panel + .jcal-panel { border-left: 1px solid var(--border); padding-left: 16px; }
+@container (max-width: 560px) {
+  .jcal-cols { grid-template-columns: 1fr; gap: 0; }
+  .jcal-cols .jcal-panel { padding: 12px 0 0; }
+  .jcal-cols .jcal-panel + .jcal-panel { border-left: 0; border-top: 1px solid var(--border); padding-left: 0; }
+  .jcal-cols .jcal-panel.first { padding-top: 0; }
 }
+.id-chip {
+  /* the identity number reads clean and standard — a calm tabular figure,
+     not a decorative serif. IDs are credentials; they should look like one. */
+  display: block; font-family: var(--font-ui); font-size: 30px; font-weight: 600;
+  color: var(--gold-bright); letter-spacing: 0.03em; font-variant-numeric: tabular-nums;
+  margin: 10px 0 12px; text-align: left;
+}
+/* one figure font across the whole system — money, percentages and counts
+   read in the same clean tabular UI face as the identity number; serif stays
+   reserved for words and headings, never numbers. */
+.num { font-family: var(--font-ui); font-variant-numeric: tabular-nums; font-weight: 600; letter-spacing: 0.02em; }
+.num.gold { color: var(--gold-bright); }
+/* full-width showcase cards fit their own content — no dead space under a
+   short list (founder overview + moments). They sit on their own grid row,
+   so a natural height never stretches a neighbour. */
+.member-grid .card.mk-overview, .member-grid #notifications-card { height: auto; min-height: 0; overflow: visible; }
 .access-locked {
   display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 10px;
   background: var(--bg-raise); border: 1px dashed var(--border-gold); color: var(--muted); font-size: 13px;
@@ -701,7 +725,7 @@ body.staff-page .grid2 .card::-webkit-scrollbar-thumb { background: rgba(212,175
 .trust-ring.low .tr-fill { stroke: url(#rfxOrangeGrad); }
 .trust-ring.crit .tr-fill { stroke: url(#rfxRedGrad); }
 .trust-ring .tr-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 10px; }
-.trust-ring .tr-pct { font-family: var(--font-serif); font-size: 30px; font-weight: 700; color: var(--gold-bright); line-height: 1; }
+.trust-ring .tr-pct { font-family: var(--font-ui); font-variant-numeric: tabular-nums; font-size: 28px; font-weight: 600; color: var(--gold-bright); line-height: 1; }
 .trust-ring .tr-cap { font-size: 8.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--faint); margin-top: 3px; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 
 /* Machinery ring row — a deterministic centered grid, never flex-wrap chaos:

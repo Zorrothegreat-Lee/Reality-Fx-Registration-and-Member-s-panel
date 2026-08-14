@@ -37,7 +37,7 @@
       '<div style="flex:1;min-width:190px;"><b style="color:var(--text);">' + ui.esc(w.name || w.email) + '</b>' +
       '<div class="small faint">' + ui.esc(w.email) + '</div>' +
       '<div class="mono" style="font-size:11.5px;color:var(--gold-bright);margin-top:3px;">' + w.walletNo + '</div></div>' +
-      '<div style="text-align:right;"><span class="serif gold" style="font-size:19px;font-weight:600;">' + db.money(w.balance, w.currency) + '</span>' +
+      '<div style="text-align:right;"><span class="num gold" style="font-size:19px;">' + db.money(w.balance, w.currency) + '</span>' +
       '<div class="small faint">balance</div></div>' +
       '<span class="btn btn-dark btn-sm">Ledger</span></div>'
     ).join('');
@@ -72,7 +72,7 @@
       '<div class="small faint" style="margin-bottom:6px;">' + ui.esc(w.email) + '</div>' +
       '<div class="mono gold" style="font-size:14px;letter-spacing:1px;margin-bottom:16px;">' + w.walletNo + ' <span class="small faint" style="letter-spacing:0;">— wallet number</span></div>' +
       '<div style="display:flex;gap:8px;align-items:baseline;margin-bottom:18px;">' +
-      '<span class="serif gold" style="font-size:30px;font-weight:600;">' + db.money(w.balance, w.currency) + '</span>' +
+      '<span class="num gold" style="font-size:30px;">' + db.money(w.balance, w.currency) + '</span>' +
       '<span class="small faint">current balance · refund credits valid 24 months · awards never expire</span></div>' +
       '<div class="eyebrow muted" style="margin-bottom:6px;">Ledger</div><ul class="audit">' +
       (w.ledger.length ? rows : '<li><span class="a-time">—</span><span class="a-txt faint">No activity yet. Balance starts at R0.00.</span></li>') +
@@ -398,7 +398,7 @@
       '<button class="btn btn-ghost" id="btn-pay-refs">' + (I.send || I.coins || '') + ' Pay vested into wallets</button>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;">' +
-      '<div><span class="serif gold" style="font-size:22px;font-weight:600;">' + a.totals.sent + '</span><div class="small faint">referrals attributed</div></div>' +
+      '<div><span class="num gold" style="font-size:22px;">' + a.totals.sent + '</span><div class="small faint">referrals attributed</div></div>' +
       '<div><span class="serif" style="font-size:22px;font-weight:600;color:var(--text);">' + a.totals.accrued + '</span><div class="small faint">accrued (vesting)</div></div>' +
       '<div><span class="serif" style="font-size:22px;font-weight:600;color:var(--text);">' + db.money(a.totals.paid, 'R') + '</span><div class="small faint">commission paid</div></div>' +
       '<div><span class="serif" style="font-size:22px;font-weight:600;color:#f0a89c;">' + a.totals.forfeited + '</span><div class="small faint">forfeited on refund</div></div>' +
@@ -512,7 +512,7 @@
         '<div class="small faint">' + ui.esc(s.email) + ' · ' + s.id + '</div>' +
         '<div class="mono" style="font-size:11.5px;color:var(--gold-bright);margin-top:3px;">' + w.walletNo + '</div></div>' +
         '<div style="text-align:center;">' + pay + '</div>' +
-        '<div style="text-align:right;"><span class="serif gold" style="font-size:18px;font-weight:600;">' + db.money(w.balance, w.currency) + '</span>' +
+        '<div style="text-align:right;"><span class="num gold" style="font-size:18px;">' + db.money(w.balance, w.currency) + '</span>' +
         '<div class="small faint">balance</div></div></div>';
     }).join('');
   }
