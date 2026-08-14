@@ -1983,3 +1983,36 @@ collapse 4→2→1 exactly at 980px/460px, zero console errors.
 
 ✅ *done when: the Trust ring is dead-centre in its card with the soft breathing
 glow at every width, and `perl serve.pl` survives probe connections.*
+## 9.54 The v61 batch — ghost track slain, every card filled, machinery glows (System A — built this pass) 🧹
+
+The closing-stages sweep caught a real responsive bug hiding in plain sight:
+
+**The 50px ghost track (real bug, fixed).** The Journey Calendar card carried an
+inline `grid-column: span 2`. At viewports ≤900px the member grid collapses to a
+single column, so `span 2` forced the browser to mint an implicit second track —
+a ~50px invisible column that shoved every card sideways and made the whole
+grid look broken. Root cause proven in real Chrome at 360/768px, then fixed:
+the span is now a responsive class that only applies ≥901px. Verified clean at
+360px (single 435px column, delta 0), 768px (662px), 1440px (3×388px).
+
+**The Machinery rings now breathe gold.** The four rings got the same SVG
+Gaussian-blur treatment as the Trust ring — the glow hugs the drawn arc, never
+a box or halo, with the same gentle 3.6s pulse.
+
+**No dead space left in any card.** The RFX OS Access and RFX Account Credit
+cards are now flex columns with their content vertically centred — no more
+empty band under "Enter the Academy". The wallet's empty state fills its box
+too.
+
+**The staff onboarding email is now a real letter.** The invite previously
+sent a 1.6KB stub. It now renders an 8KB branded onboarding letter
+(`renderStaffOnboardingEmail` in `js/db.js`, wired into every staff invite):
+the welcome, what their job actually consists of (the duty ledger — audits,
+session termination, referral verifications), how their staff Trust bar feeds
+their pay, the penalties for missed duty, and the invite link. It's the same
+letter the founder asked for to brief new hires before they ever open the
+console.
+
+✅ *done when: the member grid is a clean single column at phone widths with no
+ghost track, the Machinery rings glow like the Trust ring, no card shows dead
+bottom space, and a staff invite email arrives as the full onboarding letter.*

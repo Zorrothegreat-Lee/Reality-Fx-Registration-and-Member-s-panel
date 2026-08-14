@@ -401,18 +401,51 @@ window.RFX = window.RFX || {};
     const base = location.href.split('/').slice(0, -1).join('/');
     return base + '/staff.html?invite=' + s.inviteToken;
   }
+  /* The staff onboarding letter — the same care as the Academy prep guide.
+     A new hire walks in knowing the whole machine: the three rooms, the
+     robotic manager, the duties they will actually be given, the standing
+     that shapes their pay, and the security that makes their job easy.
+     The invite link is inside, one-time use, 7-day expiry. */
   function staffInviteEmail(s) {
     const link = makeInviteLink(s);
+    const role = STAFF_ROLES[s.role] || 'Team member';
+    const duties = [
+      ['Clear the registration queue', 'Every pending registration gets a careful decision — approve with a reason, reject with a reason. The machine prepares everything; you bring the judgement.'],
+      ['Review identity flags', 'When the gate flags a selfie or identity signal, the evidence lands in your queue. You confirm it is the person behind the payment — quality control is the point.'],
+      ['Run the system audit', 'One click runs the full 20-check health check — money, identity, the handshake, integrity. Pass or fail, the manager records it. You never need to be a developer to know the machine is healthy.'],
+      ['Sync the bridge to RFX OS', 'Push every approved student across the handshake rail and confirm the Academy received them. No student is ever left at a gateway.'],
+      ['Answer the human line', 'Live support, in your own words. The AI handles the instant stuff; you are the warm hand that makes the machine feel human.'],
+      ['Advance the merch queue', 'Collecting orders move to packing, packing to shipped — the fulfilment queue should never stall.'],
+    ];
+    const dutyRows = duties.map(function (d, i) {
+      return '<tr><td style="padding:12px 0;border-bottom:1px solid #eee;">' +
+        '<div style="font-family:Arial,sans-serif;font-weight:700;font-size:14px;color:#080808;">' + (i + 1) + '. ' + d[0] + '</div>' +
+        '<div style="font-family:Arial,sans-serif;font-size:13px;color:#444;line-height:1.55;margin-top:3px;">' + d[1] + '</div></td></tr>';
+    }).join('');
     return brandHtml() +
       '<p style="font-family:Arial,sans-serif;font-size:14px;color:#333;">Dear <b>' + escHtml(s.name) + '</b>,</p>' +
-      '<p style="font-family:Arial,sans-serif;font-size:14px;color:#333;">Welcome to the Reality FX team as <b>' + STAFF_ROLES[s.role] + '</b>. ' +
-      'To set up your staff access, open the invite below — it is <b>one-time use</b> and expires in <b>7 days</b>.</p>' +
-      '<p style="font-family:Arial,sans-serif;font-size:12px;color:#777;">Every team member works under the same standard. The system watches the work, not the clock: completed duties and quality decisions raise your standing, missed duties and late clock-ins lower it, and your standing shapes your pay. A standing of 20 or below opens a termination review. It may sound strict — that is deliberate. Reality FX does not tolerate anything less than quality, and the record is always in your hands.</p>' +
+      '<p style="font-family:Arial,sans-serif;font-size:14px;color:#333;">Welcome to the Reality FX team as <b>' + role + '</b> — the human line of the Academy.</p>' +
+      '<p style="font-family:Arial,sans-serif;font-size:13px;color:#666;">Before you set foot in the console, read this once and you will know the whole machine. You are joining at the best time: the system does the heavy lifting, and your job is judgement, care and consistency.</p>' +
+      '<table style="width:100%;border-collapse:collapse;">' +
+      '<tr><td style="padding:14px 0;border-bottom:1px solid #eee;"><div style="font-family:Arial,sans-serif;font-weight:700;font-size:14px;color:#080808;">Three rooms, one family</div>' +
+      '<div style="font-family:Arial,sans-serif;font-size:13px;color:#444;line-height:1.55;margin-top:3px;">Reality FX is one journey in three rooms. The <b>Front Desk</b> (our website) is where the world meets us. The <b>Student Portal</b> is the campus office — identity, wallet, store, events. <b>RFX OS Academy</b> is the classroom. The chain is always: FRONT DESK → STUDENT PORTAL → RFX OS. Some students are hand-picked and skip the Front Desk — but every single one must register, because registration is how identity and Student Codes are minted. Nobody reaches the classroom without a verified identity.</div></td></tr>' +
+      '<tr><td style="padding:14px 0;border-bottom:1px solid #eee;"><div style="font-family:Arial,sans-serif;font-weight:700;font-size:14px;color:#080808;">The machine does the heavy lifting</div>' +
+      '<div style="font-family:Arial,sans-serif;font-size:13px;color:#444;line-height:1.55;margin-top:3px;">The system audits itself — 20 checks run across money, identity, the handshake and integrity, and 5 security self-tests attack it the way an intruder would (brute-forced logins, guessed codes, reused links) and every hit is defended and recorded. More than 35 kinds of security events are logged for review. You do not need to be a software developer: run the audit, review the log, and on the rare technical occasion the console will tell you plainly what is wrong.</div></td></tr>' +
+      '<tr><td style="padding:14px 0;border-bottom:1px solid #eee;"><div style="font-family:Arial,sans-serif;font-weight:700;font-size:14px;color:#080808;">Your duties — the robotic manager assigns them</div>' +
+      '<div style="font-family:Arial,sans-serif;font-size:13px;color:#444;line-height:1.55;margin-top:3px;">The board hands you real work, generated live from the state of the system. Complete it and your standing rises; let it go overdue and the manager records it. This is what your job actually is:</div>' +
+      '<table style="width:100%;border-collapse:collapse;">' + dutyRows + '</table></td></tr>' +
+      '<tr><td style="padding:14px 0;border-bottom:1px solid #eee;"><div style="font-family:Arial,sans-serif;font-weight:700;font-size:14px;color:#080808;">Your standing is your pay</div>' +
+      '<div style="font-family:Arial,sans-serif;font-size:13px;color:#444;line-height:1.55;margin-top:3px;">Every team member works under the same standard, and it is never hidden: completed duties and quality decisions raise your standing; missed duties, late clock-ins and careless calls lower it. Full pay in good standing; needs-attention holds 10%; thin ice holds 20%; stood down pays nothing until an admin reviews. A standing of 20 or below opens a termination review. It sounds strict — that is deliberate. Reality FX does not tolerate anything less than quality, and the record is always in your hands.</div></td></tr>' +
+      '<tr><td style="padding:14px 0;"><div style="font-family:Arial,sans-serif;font-weight:700;font-size:14px;color:#080808;">Set up your access</div>' +
+      '<div style="font-family:Arial,sans-serif;font-size:13px;color:#444;line-height:1.55;margin-top:3px;">The button below is a <b>one-time use</b> invite that expires in <b>7 days</b>. It takes two minutes: choose your staff code, clock into your first shift, and the board will be waiting for you.</div></td></tr>' +
+      '</table>' +
       '<div style="text-align:center;margin:24px 0;">' +
       '<a href="' + link + '" style="display:inline-block;background:linear-gradient(135deg,#f0d98c,#d4af37 45%,#a8842a);color:#241a05;' +
       'text-decoration:none;font-family:Arial,sans-serif;font-weight:700;padding:13px 30px;border-radius:10px;font-size:14px;">' +
       'Set up my staff access</a></div>' +
-      '<p style="font-family:monospace;font-size:11px;color:#999;word-break:break-all;">Or paste: ' + link + '</p>' + footerHtml();
+      '<p style="font-family:monospace;font-size:11px;color:#999;word-break:break-all;">Or paste: ' + link + '</p>' +
+      '<p style="font-family:Arial,sans-serif;font-size:12px;color:#666;">You are the reason students feel cared for. Welcome to the family — the Academy is in good hands.</p>' +
+      footerHtml();
   }
 
   function createStaff(opts) {

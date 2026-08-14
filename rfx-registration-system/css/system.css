@@ -563,6 +563,11 @@ body.staff-page .grid2 .card::-webkit-scrollbar-thumb { background: rgba(212,175
 .srm-scroll::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.35); border-radius: 99px; }
 @media (max-width: 900px) { .member-grid { grid-template-columns: 1fr; } }
 .member-grid .span-full { grid-column: 1 / -1; }
+/* The journey calendar card earns two tracks on desktop but must collapse to
+   one on narrow grids — an inline span:2 would force a ghost implicit track
+   (50px) once the grid drops to 1fr, squeezing every card beside it. */
+.member-grid .journey-wide { grid-column: span 2; }
+@media (max-width: 900px) { .member-grid .journey-wide { grid-column: auto; } }
 .id-chip {
   display: inline-block; font-family: var(--font-serif); font-size: 30px; font-weight: 700;
   color: var(--gold-bright); letter-spacing: 2px; margin: 10px 0 2px;
@@ -710,6 +715,18 @@ body.staff-page .grid2 .card::-webkit-scrollbar-thumb { background: rgba(212,175
    OS hero treatment: the SVG blur already hugs the arc (never a box), and
    this gentle pulse makes the standing feel alive without any halo square. */
 .trust-card .trust-ring { margin: 0 auto; }
+
+/* The Machinery's four rings — the same OS glow dialect: each arc carries a
+   soft gold drop-shadow that follows the line itself (never a box or halo),
+   with a slow shared breath so the whole engine room feels quietly alive. */
+.mach-rings .trust-ring svg { filter: drop-shadow(0 0 5px rgba(212,175,55,0.42)); animation: machBreathe 5.2s ease-in-out infinite; }
+.mach-rings .trust-ring.caution svg { filter: drop-shadow(0 0 5px rgba(229,185,92,0.42)); }
+.mach-rings .trust-ring.low svg { filter: drop-shadow(0 0 5px rgba(224,130,42,0.42)); }
+.mach-rings .trust-ring.crit svg { filter: drop-shadow(0 0 5px rgba(231,111,81,0.42)); }
+@keyframes machBreathe {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(212,175,55,0.32)); }
+  50% { filter: drop-shadow(0 0 10px rgba(212,175,55,0.58)); }
+}
 .trust-card .trust-ring svg { filter: drop-shadow(0 0 6px rgba(212,175,55,0.55)); animation: trustBreathe 3.6s ease-in-out infinite; }
 .trust-card .trust-ring.caution svg { filter: drop-shadow(0 0 6px rgba(229,185,92,0.55)); }
 .trust-card .trust-ring.low svg { filter: drop-shadow(0 0 6px rgba(224,130,42,0.55)); }

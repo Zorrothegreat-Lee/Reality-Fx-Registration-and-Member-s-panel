@@ -940,7 +940,10 @@
         '<p class="small faint" style="margin-top:8px;">Your registration link stays valid — picking up where you left off takes minutes.</p>' +
         '</div>';
     } else if (enr.state === 'ACTIVE' || enr.state === 'RFX_OS_CONFIRMED') {
-      body = '<div style="text-align:center;padding:6px 0 14px;">' +
+      // The card body fills the whole 400px box — the check, the status and the
+      // button breathe with even space above and below (no dead gap under the
+      // CTA), and a quiet reassurance line closes the card.
+      body = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;flex:1;padding:6px 0 10px;">' +
         '<div class="big-check" style="width:58px;height:58px;margin:0 auto 14px;"><span class="hero-ic">' + (I.checkCircle || '') + '</span></div>' +
         '<p class="small" style="color:#7ee2a4;font-weight:600;margin-bottom:16px;">Your RFX OS access is ready.</p>' +
         '<div id="os-probe-row" class="os-probe-row' + (osProbeState === 'down' ? ' os-off' : '') + '" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;">' +
@@ -949,7 +952,8 @@
         (osProbeState === 'down' ? '<span class="spanner-glow" title="The Academy is being repaired right now — our engineers are on it. Your access is safe and waiting for you. Please be patient — this is temporary.">' + (I.wrench || '') + '</span> <span class="maintenance-inline">Academy maintenance in progress</span><span class="os-power-tag">' + (I.power || '') + ' power is out</span>'
           : (osProbeState === 'up' ? 'The Academy is online and waiting for you.'
             : 'Checking the Academy link…')) + '</span></div>' +
-        '<a class="btn btn-gold" id="os-enter-btn" href="' + osUrl + '" target="_blank" style="width:100%;">' + (I.unlock || '') + ' Enter the Academy</a></div>';
+        '<a class="btn btn-gold" id="os-enter-btn" href="' + osUrl + '" target="_blank" style="width:100%;">' + (I.unlock || '') + ' Enter the Academy</a>' +
+        '<p class="small faint" style="margin-top:14px;">Your identity is verified — RFX OS welcomes you by name, one session at a time.</p></div>';
     } else if (enr.state === 'APPROVED') {
       body = '<div class="access-locked"><span class="ic">' + (I.lock || '') + '</span>' +
         '<span>Approved. RFX OS unlocks the moment the handshake confirms — usually seconds. Check back shortly.</span></div>';
@@ -979,7 +983,7 @@
       body = '<div class="access-locked"><span class="ic">' + (I.clock || '') + '</span>' +
         '<span>Your registration is being processed. RFX OS unlocks once you are approved and verified.</span></div>';
     }
-    return '<div class="card"><div class="eyebrow muted" style="margin-bottom:12px;">RFX OS access</div>' + body + '</div>';
+    return '<div class="card" style="display:flex;flex-direction:column;"><div class="eyebrow muted" style="margin-bottom:12px;">RFX OS access</div>' + body + '</div>';
   }
 
   /* The MASTER KEY — the founder's overview card. One place, every door:
@@ -1085,7 +1089,11 @@
     const expiredLine = sum.expired > 0
       ? '<p class="small" style="color:var(--warn);margin-bottom:10px;">Includes ' + db.money(sum.expired, w.currency) + ' of expired credit — that part is not spendable. Spendable: <b>' + db.money(db.spendable(enr.payment.email), w.currency) + '</b></p>'
       : '';
-    return '<div class="card"><div class="eyebrow muted" style="margin-bottom:10px;">RFX account credit</div>' +
+    // The card body fills the 400px box — balance and wallet number up top,
+    // the ledger flowing beneath, so an empty account never leaves a dead
+    // gap: the list section grows to fill whatever space remains.
+    return '<div class="card" style="display:flex;flex-direction:column;">' +
+      '<div class="eyebrow muted" style="margin-bottom:10px;">RFX account credit</div>' +
       '<div class="mono gold" style="font-size:14px;letter-spacing:1px;margin-bottom:4px;">' + w.walletNo + ' <span class="small faint" style="letter-spacing:0;">— your wallet number · quote it at ceremonies &amp; giveaways</span></div>' +
       '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px;">' +
       '<span class="serif gold" style="font-size:30px;font-weight:600;">' + db.money(sum.balance, w.currency) + '</span>' +
@@ -1094,7 +1102,8 @@
       (db.spendable(enr.payment.email) >= 50
         ? '<button class="btn btn-ghost btn-sm" data-cashout style="margin-top:12px;">' + (I.send || '') + ' Cash out prize money</button>'
         : '') +
-      '<ul class="audit" style="margin-top:10px;">' + rows + '</ul></div>';
+      '<div style="flex:1;display:flex;flex-direction:column;justify-content:' + (ledger.length ? 'flex-start' : 'center') + ';margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">' +
+      '<ul class="audit">' + rows + '</ul></div></div>';
   }
 
   /* The Academy prep guide — the 'what to bring to school' letter. Students
@@ -1189,7 +1198,7 @@
         ? '<button class="btn btn-gold btn-sm" style="width:100%;margin-top:9px;" onclick="event.stopPropagation();RFX.memberSessionDone()">' + (I.check || '') + ' Mark today\'s session done</button>'
         : (st.today && st.today.done ? '<div class="small" style="color:#7ee2a4;margin-top:9px;font-size:11px;">✓ Today\'s session complete — well done.</div>' : '')) +
       '</div>';
-    return '<div class="card" id="journey-cal-card" style="cursor:pointer;grid-column:span 2;" onclick="RFX.memberJourneyCal()" title="Open your journey calendar">' +
+    return '<div class="card journey-wide" id="journey-cal-card" style="cursor:pointer;" onclick="RFX.memberJourneyCal()" title="Open your journey calendar">' +
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
       '<span class="ic" style="color:var(--gold-bright);">' + (I.calendar || '') + '</span>' +
       '<span class="eyebrow muted" style="margin-bottom:0;">Your journey calendar</span>' +
