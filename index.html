@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reality FX — Enrollment & Registration</title>
+<meta name="description" content="The official front door to the Reality FX student ecosystem. Purchase, registration, approval and the secure handoff to RFX OS.">
+<link rel="icon" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/system.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-inner">
+      <div style="display:flex;justify-content:center;margin-bottom:22px;">
+        <img src="assets/logo.svg" alt="Reality FX Registrar" class="brand-logo" style="width:290px;">
+      </div>
+
+      <div class="eyebrow" style="margin-bottom:14px;">Enrollment · Registration · Identity</div>
+      <div class="pill" id="on-duty-pill" style="margin:0 auto 18px;"><span class="dot warn"></span> Reception · 24/7 · checking coverage…</div>
+      <h1 class="display">The official <span class="gold">front door</span><br>to the Reality FX ecosystem</h1>
+      <p class="quote" style="margin-top:16px;">“Someone bought Reality FX. Let's verify that purchase, properly register them,<br>establish their official identity, and safely introduce that identity to <span class="gold">RFX OS</span>.”</p>
+
+      <div class="card card-gold" style="margin:38px auto 0;max-width:760px;text-align:left;">
+        <div class="eyebrow muted" style="margin-bottom:14px;">The journey</div>
+        <div class="timeline" id="journey"></div>
+      </div>
+
+      <div class="doors">
+        <a class="card door card-hover" href="member.html" data-smart="member">
+          <span class="door-tag" hidden></span>
+          <div class="door-ic" data-icon="user"></div>
+          <div class="eyebrow" style="margin-bottom:6px;">Students only</div>
+          <h3>My RFX Account</h3>
+          <p>Your student identity, RFX credit balance, invoices and your gateway into RFX OS — all in one place.</p>
+          <span class="btn btn-gold btn-sm">Sign in / Register →</span>
+        </a>
+        <a class="card card-gold door card-hover" href="admin.html" data-smart="admin">
+          <span class="door-tag" hidden></span>
+          <div class="door-ic" data-icon="shield"></div>
+          <div class="eyebrow" style="margin-bottom:6px;">Staff only</div>
+          <h3>Staff Console</h3>
+          <p>Receive paid enrollments, generate invoices, approve verified students and monitor the handshake with RFX OS.</p>
+          <span class="btn btn-gold btn-sm">Open the Console →</span>
+        </a>
+        <a class="card door card-hover" href="mailbox.html" data-smart="mailbox">
+          <span class="door-tag" hidden></span>
+          <div class="door-ic" data-icon="mail"></div>
+          <div class="eyebrow muted" style="margin-bottom:6px;">Preview</div>
+          <h3>Mailbox</h3>
+          <p>The simulated inbox shows every email the system would send — invoices, registration links and verification codes.</p>
+          <span class="btn btn-ghost btn-sm">Open the Mailbox →</span>
+        </a>
+        <a class="card door card-hover" href="staff.html" data-smart="staff">
+          <span class="door-tag" hidden></span>
+          <div class="door-ic" data-icon="userCheck"></div>
+          <div class="eyebrow muted" style="margin-bottom:6px;">Team</div>
+          <h3>Staff Portal</h3>
+          <p>Hired team only. Clock in for your shift, see who's on duty and keep the 24/7 reception promise alive.</p>
+          <span class="btn btn-ghost btn-sm">Open the Portal →</span>
+        </a>
+        <a class="card door card-hover" href="srm.html" data-smart="srm">
+          <span class="door-tag" hidden></span>
+          <div class="door-ic" data-icon="users"></div>
+          <div class="eyebrow muted" style="margin-bottom:6px;">SRM</div>
+          <h3>Student Relationships</h3>
+          <p>Every approved student lives here as a relationship record — identity, wallet, awards, spend history and their whole journey.</p>
+          <span class="btn btn-ghost btn-sm">Open the SRM →</span>
+        </a>
+      </div>
+
+      <div class="card" id="open-links" style="margin-top:18px;display:none;text-align:left;"></div>
+
+      <p class="small" id="smart-hint" style="margin-top:18px;color:var(--muted);min-height:18px;"></p>
+
+      <div style="margin-top:44px;color:var(--faint);font-size:12px;line-height:1.8;">
+        Reality FX · The Trading Academy · Since January 2020<br>
+        This is the Registrar. RFX OS Academy is where approved students learn.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/icons.js"></script>
+<script src="js/db.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/reception.js"></script>
+<script src="js/bot.js"></script>
+</body>
+</html>
