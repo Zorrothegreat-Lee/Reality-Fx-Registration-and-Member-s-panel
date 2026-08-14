@@ -705,6 +705,19 @@ body.staff-page .grid2 .card::-webkit-scrollbar-thumb { background: rgba(212,175
 .mach-rings { display: grid; grid-template-columns: repeat(4, auto); justify-content: center; gap: 8px 34px; margin-bottom: 18px; }
 @media (max-width: 980px) { .mach-rings { grid-template-columns: repeat(2, auto); gap: 16px 30px; } }
 @media (max-width: 460px) { .mach-rings { grid-template-columns: 1fr; } }
+
+/* The Trust card's ring — centred dial with a soft breathing gold glow, the
+   OS hero treatment: the SVG blur already hugs the arc (never a box), and
+   this gentle pulse makes the standing feel alive without any halo square. */
+.trust-card .trust-ring { margin: 0 auto; }
+.trust-card .trust-ring svg { filter: drop-shadow(0 0 6px rgba(212,175,55,0.55)); animation: trustBreathe 3.6s ease-in-out infinite; }
+.trust-card .trust-ring.caution svg { filter: drop-shadow(0 0 6px rgba(229,185,92,0.55)); }
+.trust-card .trust-ring.low svg { filter: drop-shadow(0 0 6px rgba(224,130,42,0.55)); }
+.trust-card .trust-ring.crit svg { filter: drop-shadow(0 0 6px rgba(231,111,81,0.55)); }
+@keyframes trustBreathe {
+  0%, 100% { filter: drop-shadow(0 0 5px rgba(212,175,55,0.45)); }
+  50% { filter: drop-shadow(0 0 12px rgba(212,175,55,0.75)); }
+}
 .trust-ring .tr-crit { font-size: 7.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #f0a89c; font-weight: 700; margin-top: 4px; }
 .trust-ring.caution .tr-pct { color: #d8b25c; }
 .trust-ring.low .tr-pct { color: #e79a4a; }

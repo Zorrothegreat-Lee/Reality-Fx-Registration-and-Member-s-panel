@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trust card proof</title>
+<link rel="stylesheet" href="css/system.css?v=20260810-59">
+<style>
+  body { background: #080808; padding: 40px; display: flex; justify-content: center; }
+  .stage { width: 1080px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .stage .card { height: 400px; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div id="trust"></div>
+  <div class="card"></div>
+  <div class="card"></div>
+</div>
+<script src="assets/icons.js?v=20260810-59"></script>
+<script src="js/db.js?v=20260810-59"></script>
+<script src="js/ui.js?v=20260810-59"></script>
+<script>
+  // Render the trust card exactly as member.js does (centred column + ring).
+  window.addEventListener('load', function () {
+    try {
+      var ui = window.RFX.ui, db = window.RFX.db;
+      var I = window.RFX.icons || {};
+      var html = '<div class="card trust-card" style="cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:26px 22px;">' +
+        ui.trustRingHTML(100, { tierCls: '', cap: 'standing' }) +
+        '<div style="max-width:280px;">' +
+        '<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;">' +
+        '<span class="ic" style="color:var(--gold-bright);">' + (I.shieldCheck || '') + '</span>' +
+        '<span class="eyebrow muted" style="margin-bottom:0;">Your Trust</span>' +
+        '</div>' +
+        '<div style="font-size:14px;color:var(--text);font-weight:600;">Excellent standing</div>' +
+        '<div class="small faint" style="margin-top:4px;">1 recorded action · click to view →</div>' +
+        '</div></div>';
+      document.getElementById('trust').innerHTML = html;
+    } catch (e) {
+      document.getElementById('trust').textContent = 'ERR: ' + e.message;
+    }
+  });
+</script>
+</body>
+</html>

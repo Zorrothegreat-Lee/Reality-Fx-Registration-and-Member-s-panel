@@ -523,16 +523,20 @@
         : (ts.tier === 'danger' ? '<p class="small" style="color:#f0a89c;margin-top:12px;">' + (ts.extended ? 'Your timeout is extended and your account is critically low. 0% means full restriction.' : (ts.timedOut ? 'Your account is currently timed out. Complete your review steps and keep good conduct — the ring recovers.' : 'Danger zone — below ' + ts.timeoutAt + '% your account is timed out. Good conduct will earn it back.')) + '</p>'
           : (ts.tier === 'excellent' ? '<p class="small faint" style="margin-top:12px;">Excellent standing — the highest tier at Reality FX. Keep doing what you\'re doing.</p>'
             : '<p class="small faint" style="margin-top:12px;">Your standing at Reality FX — it rises with good conduct and falls with policy breaches. Click the ring to see every action that moved it.</p>')));
-    return '<div class="card" style="cursor:pointer;display:flex;align-items:center;gap:22px;flex-wrap:wrap;" onclick="RFX.memberTrustDetail()" title="Open your standing dashboard">' +
+    /* The ring owns the card's centre — the OS hero treatment: dial on top,
+       copy beneath, everything aligned on the same axis. The card is clickable
+       and the ring breathes a soft gold glow (the SVG blur already hugs the
+       arc; this adds a gentle pulse so the standing feels alive, like the OS). */
+    return '<div class="card trust-card" style="cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:26px 22px;" onclick="RFX.memberTrustDetail()" title="Open your standing dashboard">' +
       ui.trustRingHTML(ts.score, { tierCls: tierCls, cap: 'standing' }) +
-      '<div style="flex:1;min-width:200px;">' +
-      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' +
+      '<div style="max-width:280px;">' +
+      '<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;">' +
       '<span class="ic" style="color:var(--gold-bright);">' + (I.shieldCheck || '') + '</span>' +
       '<span class="eyebrow muted" style="margin-bottom:0;">Your Trust</span>' +
       '</div>' +
       '<div style="font-size:14px;color:var(--text);font-weight:600;">' + ui.esc(ts.label) + '</div>' +
       '<div class="small faint" style="margin-top:4px;">' + events.length + ' recorded ' + (events.length === 1 ? 'action' : 'actions') + ' · click to view →</div>' +
-      warnLine + '</div></div>';
+      '</div>' + warnLine + '</div>';
   }
   /* The standing dashboard — every good & bad action that moved the bar,
      with the thresholds explained, and the buddy rule made visible. */
