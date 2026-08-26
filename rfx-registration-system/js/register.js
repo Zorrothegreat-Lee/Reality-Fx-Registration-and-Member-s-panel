@@ -57,10 +57,11 @@
       el.classList.remove('dc-expired');
       // before approval the clock hasn't started — show the full window with
       // an honest "starts when you're approved" note instead of a fake tick
+      const hrs = (cur.demoPass && cur.demoPass.hours) || 24;
       if (!approved) {
         timeEl.textContent = db.fmtCountdown(left);
-        if (labelEl) labelEl.textContent = '24h academy pass';
-        el.title = 'Your 24-hour academy tour begins when your registration is approved';
+        if (labelEl) labelEl.textContent = hrs + 'h academy pass';
+        el.title = 'Your ' + hrs + '-hour academy tour begins when your registration is approved';
         return;
       }
       timeEl.textContent = db.fmtCountdown(left);
@@ -284,8 +285,16 @@
     if (lockedUntil && new Date(lockedUntil) > new Date()) {
       const mins = Math.ceil((new Date(lockedUntil) - new Date()) / 60000);
       $('ev-hint').innerHTML = '<span style="color:var(--warn);">The code is temporarily locked after repeated wrong entries — request a new code in ' + mins + ' minute' + (mins === 1 ? '' : 's') + '.</span>';
+    } else if (db.getSettings().demoMode) {
+      // DEMO MODE — no SMTP server exists, so no real email can leave the
+      // machine. The honest "delivery" is the code itself, shown here (and
+      // mirrored in the Mailbox) so the flow stays testable end to end.
+      // Production (demoMode:false) NEVER shows the code — it goes only to
+      // the student's registered inbox via the mail rail (see FOR-LEE §7).
+      const code = (enr.registration && enr.registration.verifyCode) || '—';
+      $('ev-hint').innerHTML = 'Demo mode — no real email is sent. Your code is <b style="font-size:15px;letter-spacing:2px;color:var(--gold-bright);">' + ui.esc(code) + '</b> <span style="opacity:.7;">(it also lands in your Mailbox). In production the code goes only to your email.</span>';
     } else {
-      $('ev-hint').textContent = 'In the demo, the code also lands in your Mailbox.';
+      $('ev-hint').textContent = 'A 6-digit code was sent to your email — it expires in 10 minutes.';
     }
     refreshMailto();
     // rebuild code boxes
@@ -327,7 +336,14 @@
   $('ev-resend').addEventListener('click', () => {
     db.resendVerifyCode(enr);
     refreshMailto(); // the resend minted a NEW code — the email-app link must carry it
-    ui.toastOk('A new code was emailed to ' + enr.payment.email + ' — open your email app or see the Mailbox. Attempts reset.');
+    if (db.getSettings().demoMode) {
+      // demo: the "email" is the on-screen code + the Mailbox (no SMTP exists)
+      const code = (enr.registration && enr.registration.verifyCode) || '';
+      ui.toastOk('New code: ' + code + ' — shown here and in your Mailbox. Attempts reset. (Demo mode: no real email is sent.)');
+      initEmailStep(); // re-render the hint so the fresh code is visible immediately
+    } else {
+      ui.toastOk('A new code was emailed to ' + enr.payment.email + ' — check your inbox. Attempts reset.');
+    }
   });
   $('verify-email').addEventListener('click', () => {
     const row = $('ev-codes');
@@ -595,7 +611,7 @@
 
   /* ---------------- step 5: agreements ---------------- */
   const AGREEMENT_SUMMARIES = {
-    tcs: 'The rules of your Reality FX course: how lessons, quizzes and the Academy operate, and what is expected of you as a student.',
+    tcs: 'The rules of your Reality FX course: how lessons, Intelligent Assessments and the Academy operate, and what is expected of you as a student.',
     fup: 'One student, one account. How the Academy protects its education through integrity monitoring, and what counts as a violation.',
     privacy: 'What personal data Reality FX collects (your name, contact details and a verification selfie), why, and how it is protected. Reality FX does not collect government ID or passport numbers — ever.',
     refund: 'If your registration cannot be approved, you choose between an instant, fee-free RFX account credit — valid 24 months, usable for any Reality FX course, a seat transfer to one family member, or mentorship sessions — and a cash refund paid via PayPal in a single consolidated monthly batch. For cross-border payments, Reality FX may recommend (or require) the fee-free RFX account credit where a cash refund\'s transfer and FX costs would exceed its value; your credit is always honoured in full, with no deduction. Where the issue is fixable, you may instead correct and re-apply within 7 days. IMPORTANT — an approved refund revokes all rights and ownership of Reality FX course material, immediately terminates RFX OS access, and starts a 30-day period during which the refunding identity may not re-enroll or re-apply. Every refund request is scored against the identity\'s history — prior refunds, timing, payment method and links to other accounts. Flags are reviewed by a moderator; repeated, rapid or abusive refund activity, or refund farming across multiple identities, may result in denial of future enrollment and is grounds for action under the Fair Usage Policy.',
@@ -854,7 +870,7 @@
     const enter = $('ap-enter');
     const lockMsg = $('ap-lock-msg');
     if (enter) {
-      enter.href = db.osIndexUrl() + '?sid=' + encodeURIComponent(enr.studentId || '');
+      enter.href = db.osAuthUrl(enr.payment && enr.payment.email);
     }
     if (enr.state === 'ACTIVE' || enr.state === 'RFX_OS_CONFIRMED') {
       enter.style.display = 'inline-flex';
@@ -910,6 +926,38 @@
   [['back-email', 0], ['back-captcha', 1], ['back-identity', 2], ['back-agreements', 3], ['back-review', 4]].forEach(([id, target]) => {
     $(id).addEventListener('click', () => { step = target; showStep(); });
   });
+
+  /* PWA INSTALL — the portal installs like an app on any phone. The approved
+     screen's ghost button appears only when the browser can actually install,
+     or on iPhone/iPad where Share → Add to Home Screen is the path. */
+  let deferredInstall = null;
+  function wirePwaInstall() {
+    const btn = document.getElementById('ap-install');
+    if (!btn) return;
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent || '');
+    const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+    if (standalone) return; // already installed — nothing to offer
+    const showBtn = () => { btn.style.display = ''; };
+    const hideBtn = () => { btn.style.display = 'none'; };
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      deferredInstall = e;
+      showBtn();
+    });
+    btn.addEventListener('click', function () {
+      if (deferredInstall) {
+        deferredInstall.prompt();
+        deferredInstall.userChoice.then(function () { deferredInstall = null; hideBtn(); }).catch(function () {});
+      } else if (ios) {
+        ui.toastWarn('On iPhone/iPad: tap Share, then “Add to Home Screen” — the portal installs like an app.');
+      } else {
+        ui.toastOk('Open the browser menu → “Install app” to put the portal on your home screen.');
+      }
+    });
+    window.addEventListener('appinstalled', hideBtn);
+    if (ios) showBtn();
+  }
+  wirePwaInstall();
 
   boot();
 })();

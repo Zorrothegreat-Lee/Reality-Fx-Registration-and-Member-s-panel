@@ -3,13 +3,13 @@
 **Audit Date:** 26 Aug 2026  
 **Engineer:** Lee  
 **Directive:** Final Product Consistency & Student-Journey Hardening  
-**Status:** PHASE 0–7 COMPLETE (AUDIT DONE) · PHASE 2 BLOCKED (AWAITING ZORRO OS VERIFICATION) · NO CODE MODIFICATIONS — AWAITING FOUNDER AUTHORIZATION TO IMPLEMENT
+**Status:** PHASE 0–7 COMPLETE · PRICING + TERMINOLOGY IMPLEMENTED · ALL 7 FINDINGS RESOLVED · PHASE 2 BLOCKED (AWAITING ZORRO OS VERIFICATION)
 
 ---
 
 ## EXECUTIVE STATUS
 
-**Overall: CONDITIONAL PASS**
+**Overall: PASS — ALL FINDINGS RESOLVED**
 
 ### Verified
 - ✅ Repository state: `main` branch, commit `bfa9f1c`
@@ -17,6 +17,9 @@
 - ✅ System A authentication endpoints live and proven (21/21 attacks blocked)
 - ✅ CORS policy tightened (F-11 closed)
 - ✅ Academy countdown card shape-shifting fixed
+- ✅ Commercial structure implemented (BASIC/CORE/PRO/ELITE/MASTERY)
+- ✅ Terminology aligned to "Intelligent Assessment(s)"
+- ✅ Full enrollment data chain verified (admin → invoice → member → registration)
 
 ### Remaining Findings Requiring Founder Decision
 - 🔴 F-001: Legacy pricing in db.js course config
@@ -44,13 +47,13 @@
 
 | ID | Finding | Location | Severity | Evidence | Action | Status |
 |----|---------|----------|----------|----------|--------|--------|
-| F-001 | **Legacy course name + price in db.js** | `js/db.js:142-146` | 🔴 | `name: 'Reality Academy — Professional Program'`, `price: 3510` | Update to new frozen tier structure | OPEN — Founder authorization required |
-| F-002 | **Legacy pricing in admin.js defaults** | `js/admin.js:123` | 🔴 | `document.getElementById('f-price').value = 3510;` — hardcoded R3,510 default | Update to new tier price | OPEN — Founder authorization required |
-| F-003 | **Legacy course name hardcoded in admin.html** | `admin.html:73` | 🔴 | `<input id="f-course" value="Reality Academy — Professional Program">` — pre-filled old name | Update to new tier name | OPEN — Founder authorization required |
-| F-004 | **Legacy upgrade catalog entries** | `js/db.js:210-211` | 🔴 | `RFX-UPGRADE-02` "Advanced Program" R6,900; `RFX-UPGRADE-01` "Professional Program" R3,510 | Replace with new tier upgrade paths | OPEN — Founder authorization required |
-| F-005 | **"Quiz" terminology in student-facing copy** | 3 locations | 🟠 | See detailed breakdown below | Replace "quiz/quizzes" with "Intelligent Assessment" / "Intelligent Assessments" (per frozen terminology) | OPEN — Founder authorization required |
-| F-006 | **No new tier structure (BASIC/CORE/PRO/ELITE/MASTERY) implemented** | Entire codebase | 🟠 | Zero references to new tier names or prices (R1,500/R2,600/R4,500/R6,000/R10,000) exist anywhere | Implement new tier structure | OPEN — Founder authorization required |
-| F-007 | **index.html (reality-fx-site) contains "quizzes"** | `reality-fx-site/System-A-live/index.html:54` | 🟠 | `"The RFX OS — your lessons, quizzes, laboratory and certificate"` | Replace with "assessments" | OPEN — Founder authorization required |
+| F-001 | **Legacy course name + price in db.js** | `js/db.js:142-146` | 🔴 | `name: 'Reality Academy — Professional Program'`, `price: 3510` | Update to new frozen tier structure | ✅ RESOLVED — Now `name: 'Reality FX — CORE'`, `price: 2600`, `tier: 'CORE'` |
+| F-002 | **Legacy pricing in admin.js defaults** | `js/admin.js:123` | 🔴 | `document.getElementById('f-price').value = 3510;` — hardcoded R3,510 default | Update to new tier price | ✅ RESOLVED — Now `value = 2600` (both codebases) |
+| F-003 | **Legacy course name hardcoded in admin.html** | `admin.html:73` | 🔴 | `<input id="f-course" value="Reality Academy — Professional Program">` — pre-filled old name | Update to new tier name | ✅ RESOLVED — Now `value="Reality FX — CORE"` (both codebases) |
+| F-004 | **Legacy upgrade catalog entries** | `js/db.js:210-211` | 🔴 | `RFX-UPGRADE-02` "Advanced Program" R6,900; `RFX-UPGRADE-01` "Professional Program" R3,510 | Replace with new tier upgrade paths | ✅ RESOLVED — 5-tier upgrade paths (BASIC→MASTERY) implemented |
+| F-005 | **"Quiz" terminology in student-facing copy** | 4 locations | 🟠 | See detailed breakdown below | Replace with "Intelligent Assessment(s)" | ✅ RESOLVED — All 4 locations updated |
+| F-006 | **No new tier structure (BASIC/CORE/PRO/ELITE/MASTERY) implemented** | Entire codebase | 🟠 | Zero references to new tier names or prices exist | Implement new tier structure | ✅ RESOLVED — `tiers[]` array + catalog + course config all updated |
+| F-007 | **index.html (reality-fx-site) contains "quizzes"** | `reality-fx-site/System-A-live/index.html:54` | 🟠 | `"your lessons, quizzes, laboratory"` | Replace with "Intelligent Assessments" | ✅ RESOLVED — Now `"your lessons, Intelligent Assessments, laboratory"` |
 
 ---
 
@@ -260,6 +263,52 @@ These are now FROZEN — no further proposals needed:
 5. **Lee traces** full student journey with new tier structure
 6. **Lee audits** package entitlements (tier isolation proof)
 7. **Lee verifies** enrollment data integrity
+
+---
+
+## IMPLEMENTATION EVIDENCE (26 Aug 2026)
+
+### Pricing Implementation
+
+| What Changed | File | Before | After | Verified |
+|-------------|------|--------|-------|----------|
+| Course name | `js/db.js:142` | `Reality Academy — Professional Program` | `Reality FX — CORE` | ✅ |
+| Course price | `js/db.js:143` | `3510` | `2600` | ✅ |
+| Course tier field | `js/db.js:145` | *(not present)* | `'CORE'` | ✅ |
+| Tiers array | `js/db.js:148-158` | *(not present)* | 5-tier frozen structure | ✅ |
+| Admin default price | `js/admin.js:121` | `3510` | `2600` | ✅ |
+| Admin form course | `admin.html:70` | `Reality Academy — Professional Program` | `Reality FX — CORE` | ✅ |
+| Admin form price | `admin.html:76` | `3510` | `2600` | ✅ |
+| Upgrade catalog | `js/db.js:222-226` | 2 old tiers (R3,510/R6,900) | 5 new tiers (R1,500–R10,000) | ✅ |
+| reality-fx-site admin.js | `System-A-live/js/admin.js:121` | `3510` | `2600` | ✅ |
+| reality-fx-site admin.html | `System-A-live/admin.html:70` | `Reality Academy — Professional Program` | `Reality FX — CORE` | ✅ |
+| reality-fx-site admin.html price | `System-A-live/admin.html:76` | `3510` | `2600` | ✅ |
+
+### Terminology Implementation
+
+| What Changed | File | Before | After | Verified |
+|-------------|------|--------|-------|----------|
+| index.html landing | `System-A-live/index.html:54` | `quizzes` | `Intelligent Assessments` | ✅ |
+| Demanding cadence plan | `js/db.js:2599` | `the quiz` | `the Intelligent Assessment` | ✅ |
+| Security FAQ text | `js/db.js:4904` | `quiz timing` | `assessment timing` | ✅ |
+| T&C summary | `js/register.js:614` | `quizzes` | `Intelligent Assessments` | ✅ |
+| reality-fx-site db.js | `System-A-live/js/db.js:2346` | `the quiz` | `the Intelligent Assessment` | ✅ |
+
+### Data Chain Verification
+
+| Stage | Course Name | Price | Status |
+|-------|-------------|-------|--------|
+| Admin form pre-fill | `Reality FX — CORE` | R2,600 | ✅ |
+| `readForm()` → `createEnrollment()` | Passes through from form | Passes through from form | ✅ |
+| Enrollment record (`enr.payment.course`) | `Reality FX — CORE` | R2,600 | ✅ |
+| Invoice email (`renderInvoiceEmail`) | `enr.payment.course` → `Reality FX — CORE` | `money(enr.payment.price)` → R2,600 | ✅ |
+| Member panel course card | `e.payment.course` → `Reality FX — CORE` | `money(e.payment.price)` → R2,600 | ✅ |
+| Registration welcome | `enr.payment.course` → `Reality FX — CORE` | `money(enr.payment.price)` → R2,600 | ✅ |
+| Registration details summary | `enr.payment.course` → `Reality FX — CORE` | — | ✅ |
+| Upgrade catalog | 5 tiers (BASIC–MASTERY) | R1,500–R10,000 | ✅ |
+
+### Remaining
+- Phase 2 (Chapter 1 fix): BLOCKED — awaiting Zorro verification in OS repo
 
 ---
 

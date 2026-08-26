@@ -140,11 +140,23 @@ window.RFX = window.RFX || {};
       address: 'required',
     },
     course: {
-      name: 'Reality Academy — Professional Program',
-      price: 3510,
+      name: 'Reality FX — CORE',
+      price: 2600,
       currency: 'R',
+      tier: 'CORE',
       paymentMethods: ['Instant EFT', 'Card (Visa / Mastercard)', 'PayPal'],
     },
+    // ─── FROZEN COMMERCIAL STRUCTURE (Founder-approved 26 Aug 2026) ───
+    // BASIC R1,500 | CORE R2,600 | PRO R4,500 | ELITE R6,000 | MASTERY R10,000
+    // NO LIVE tier. MASTERY only = live learning + private mentoring.
+    // Assessment difficulty (Standard/Challenging/Elite) ≠ commercial packages.
+    tiers: [
+      { id: 'BASIC',  name: 'Reality FX — BASIC',  price: 1500,  label: 'Entry-level self-directed pathway' },
+      { id: 'CORE',   name: 'Reality FX — CORE',   price: 2600,  label: 'Flagship foundation programme' },
+      { id: 'PRO',    name: 'Reality FX — PRO',    price: 4500,  label: 'Practical development + Arena' },
+      { id: 'ELITE',  name: 'Reality FX — ELITE',  price: 6000,  label: 'Advanced competency pathway' },
+      { id: 'MASTERY', name: 'Reality FX — MASTERY', price: 10000, label: 'Premium / private development' },
+    ],
     // Self-repair bookkeeping: when the mechanic clamps a negative wallet it
     // records the write-off here so the ledger stays honest (money is never
     // silently created or destroyed — even repairs are reconciled).
@@ -207,8 +219,12 @@ window.RFX = window.RFX || {};
     // the spend rail). Students pick from a dropdown sorted by price ascending;
     // they can only pay when their spendable balance covers the price.
     catalog: [
-      { code: 'RFX-UPGRADE-02', name: 'Reality Academy — Advanced Program', price: 6900, currency: 'R', note: 'Upgrade to the Advanced Program' },
-      { code: 'RFX-UPGRADE-01', name: 'Reality Academy — Professional Program', price: 3510, currency: 'R', note: 'Upgrade to the Professional Program' },
+      // ─── FROZEN UPGRADE PATHS (Founder-approved 26 Aug 2026) ───
+      { code: 'RFX-UPGRADE-05', name: 'Reality FX — MASTERY', price: 10000, currency: 'R', note: 'Upgrade to MASTERY — private mentoring + live sessions' },
+      { code: 'RFX-UPGRADE-04', name: 'Reality FX — ELITE', price: 6000, currency: 'R', note: 'Upgrade to ELITE — advanced competency pathway' },
+      { code: 'RFX-UPGRADE-03', name: 'Reality FX — PRO', price: 4500, currency: 'R', note: 'Upgrade to PRO — practical development + Arena' },
+      { code: 'RFX-UPGRADE-02', name: 'Reality FX — CORE', price: 2600, currency: 'R', note: 'Upgrade to CORE — flagship foundation programme' },
+      { code: 'RFX-UPGRADE-01', name: 'Reality FX — BASIC', price: 1500, currency: 'R', note: 'Upgrade to BASIC — entry-level self-directed pathway' },
       { code: 'RFX-MENTOR-01', name: 'Mentorship session (1 hour)', price: 350, currency: 'R', note: 'One-on-one live mentoring with a senior trader' },
       { code: 'RFX-SEAT-01', name: 'Seat transfer to a family member', price: 150, currency: 'R', note: 'One course = one seat. If you can\'t continue, pass your seat to one family member instead of losing it' },
       // Merch — physical goods, so purchases need size + address and flow through
@@ -1109,6 +1125,27 @@ window.RFX = window.RFX || {};
     ep = ep.replace(/\/+$/, '');
     if (/\.html?($|[?#])/.test(ep)) return ep;          // already a page URL
     return ep + '/index.html';
+  }
+
+  /* Production auth gateway — the openOs Cloud Function that issues the
+     RS256-signed JWT.  The member panel opens this URL instead of going
+     directly to the OS; the Cloud Function looks up the enrollment,
+     generates the token, and redirects to the OS with ?token=.
+
+     In demo/fallback mode (no Firebase project), falls back to the
+     local fork server's /open-os endpoint so the handshake still works
+     during local development. */
+  const PROD_AUTH_GATE = 'https://us-central1-reality-fx-production-25796.cloudfunctions.net/openOs';
+  const LOCAL_AUTH_GATE = '/open-os';  // local fork server fallback
+  function osAuthUrl(email) {
+    // In production, use the Cloud Function which issues RS256 tokens.
+    // In demo/local mode, fall back to the fork server.
+    if (state.rfxAuthProduction === false) {
+      // explicit local mode — use the fork server
+      return LOCAL_AUTH_GATE + '?email=' + encodeURIComponent(email || '');
+    }
+    // Default: production Cloud Function
+    return PROD_AUTH_GATE + '?email=' + encodeURIComponent(email || '');
   }
   function updateSettings(patch) {
     state = Object.assign({}, state, patch);
@@ -2559,7 +2596,7 @@ window.RFX = window.RFX || {};
      ------------------------------------------------------------ */
   const CAL_TIERS = {
     standard: { label: 'Standard', cadence: '2 sessions · 30 min each', weeklySessions: 2, blurb: 'A gentle rhythm — a few fixed Academy dates and light study nudges.', plan: ['Review this week\'s lesson once', 'One journal entry for your best trade this week'] },
-    demanding: { label: 'Demanding', cadence: '3 sessions · 45 min each', weeklySessions: 3, blurb: 'A steady discipline — scheduled study blocks plus every Academy date.', plan: ['3 study blocks this week (45 min each)', 'Journal every trade with a written reason', 'Re-watch the lesson before the quiz'] },
+    demanding: { label: 'Demanding', cadence: '3 sessions · 45 min each', weeklySessions: 3, blurb: 'A steady discipline — scheduled study blocks plus every Academy date.', plan: ['3 study blocks this week (45 min each)', 'Journal every trade with a written reason', 'Re-watch the lesson before the Intelligent Assessment'] },
     elite: { label: 'Elite', cadence: 'Daily · 60 min blocks', weeklySessions: 5, blurb: 'Trading-room intensity — daily blocks, mentor check-ins and exam prep.', plan: ['Daily 60-min study block', 'Simulated exam every Friday', 'Mentor check-in before the next assessment'] },
   };
   /* Briefing types a student can subscribe to — the Journey Calendar only
@@ -3117,6 +3154,16 @@ window.RFX = window.RFX || {};
     email('registration', enr.payment.email, 'Complete your Reality FX registration — ' + enr.payment.customerName, regHtml);
     enr.progress.registrationEmail = true;
     audit(enr, 'REGISTRATION_EMAIL_SENT', 'Secure registration link sent to ' + enr.payment.email);
+
+    // 3) DEMO-TOUR WELCOME — sent LAST so it is the newest message in the
+    //    student's inbox (the inbox reads newest-first): a tour student opens
+    //    their mailbox and the warm letter that explains the tour is the first
+    //    thing they read.
+    if (enr.demoPass) {
+      const tourHtml = renderDemoTourEmail(enr);
+      email('demo-tour', enr.payment.email, 'Welcome to your Reality FX tour — ' + enr.payment.customerName, tourHtml);
+      audit(enr, 'DEMO_TOUR_EMAIL_SENT', 'Tour welcome letter sent to ' + enr.payment.email);
+    }
     save();
   }
 
@@ -4717,6 +4764,30 @@ window.RFX = window.RFX || {};
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
+  /* The demo-tour welcome letter — a warm, honest welcome for a tour student.
+     It mirrors the same care as the Academy prep guide, tuned to the tour:
+     what the tour is, what they can expect, and exactly what happens when the
+     clock runs out (their registration link stays valid — continuing to a
+     real enrollment takes minutes, not weeks). */
+  function renderDemoTourEmail(enr) {
+    const p = enr.payment;
+    const hours = (enr.demoPass && enr.demoPass.hours) || 24;
+    const days = hours / 24;
+    const windowLabel = (hours % 24 === 0) ? (days + ' day' + (days === 1 ? '' : 's')) : hours + ' hours';
+    return brandHtml() +
+      '<p style="font-family:Arial,sans-serif;font-size:14px;color:#333;">Dear <b>' + escHtml(p.customerName) + '</b>,</p>' +
+      '<p style="font-family:Arial,sans-serif;font-size:14px;color:#333;">Welcome to <b>Reality FX</b> — and thank you for stepping into the tour.</p>' +
+      '<p style="font-family:Arial,sans-serif;font-size:13px;color:#666;">This is a <b>free, time-boxed tour</b> of the Academy — it feels exactly like a real purchase so you can see the whole machine from the inside: the official invoice, the secure registration link, the identity and verification steps, and the golden countdown that shows exactly how your Academy time works.</p>' +
+      '<table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;">' +
+      '<tr><td style="padding:10px 0;border-bottom:1px solid #eee;font-size:13px;color:#333;">Your tour lasts <b>' + windowLabel + '</b>, counted from the moment you are approved.</td></tr>' +
+      '<tr><td style="padding:10px 0;border-bottom:1px solid #eee;font-size:13px;color:#333;">You will see the <b>real registration journey</b> — email verification, identity, the agreements — and once approved, your tour clock starts draining live.</td></tr>' +
+      '<tr><td style="padding:10px 0;font-size:13px;color:#333;">When the tour ends, your Academy door closes — <b>but your registration link stays valid</b>, so continuing to a real enrollment takes minutes, not weeks.</td></tr>' +
+      '</table>' +
+      '<p style="font-family:Arial,sans-serif;font-size:13px;color:#666;">Your secure registration link is in the email right after this one. If anything ever feels unclear, the human line is always open — every question is answered, every time.</p>' +
+      '<p style="font-family:Arial,sans-serif;font-size:14px;color:#333;">Welcome to the family. The learning is the point.</p>' +
+      footerHtml();
+  }
+
   function renderInvoiceEmail(enr) {
     const p = enr.payment;
     return brandHtml() +
@@ -4831,7 +4902,7 @@ window.RFX = window.RFX || {};
       },
       {
         t: 'The rules that keep everyone safe',
-        b: 'One student, one account — sharing or selling access is a breach of the Fair Usage Policy. The Academy also keeps exactly one active session per student: the moment you sign in anywhere (a new device, a new browser, even a second browser on the same computer), the previous session ends on its own — you never need to sign out of old devices, the system does it for you. This is how we stop a course from being shared with someone else. Suspicious activity, unusual quiz timing or perfect-score patterns are reviewed by the moderator, who checks the evidence before any decision. A refund request ends your access to materials and starts a re-application cooldown; the full policy is in the agreements you accepted.'
+        b: 'One student, one account — sharing or selling access is a breach of the Fair Usage Policy. The Academy also keeps exactly one active session per student: the moment you sign in anywhere (a new device, a new browser, even a second browser on the same computer), the previous session ends on its own — you never need to sign out of old devices, the system does it for you. This is how we stop a course from being shared with someone else. Suspicious activity, unusual assessment timing or perfect-score patterns are reviewed by the moderator, who checks the evidence before any decision. A refund request ends your access to materials and starts a re-application cooldown; the full policy is in the agreements you accepted.'
       },
       {
         t: 'Why these measures exist — and why they protect you',
@@ -5344,7 +5415,7 @@ window.RFX = window.RFX || {};
     // meta
     now, money, fmtDate, fmtDateShort, IDEMPOTENCY_KEY_FIELD,
     // settings
-    getSettings, osIndexUrl, updateSettings, getCatalog, saveCatalog,
+    getSettings, osIndexUrl, osAuthUrl, updateSettings, getCatalog, saveCatalog,
     // emails
     email, emails, markEmailRead, unreadCount, clearEmails,
     // enrollments

@@ -13,12 +13,14 @@
     const awaitingApp = all.filter(e => e.state === 'PENDING' && e.registration && e.registration.submittedAt).length;
     const active = all.filter(e => e.state === 'ACTIVE').length;
     const failed = all.filter(e => e.state === 'SYNC_FAILED').length;
+    const awaitingHandoff = all.filter(e => e.state === 'SYNCING_WITH_RFX_OS' || e.state === 'RFX_OS_CONFIRMED').length;
     const I = RFX.icons || {};
     const cards = [
       { ic: I.clipboard, num: all.length, lab: 'Enrollments' },
       { ic: I.mail, num: awaitingReg, lab: 'Awaiting registration' },
       { ic: I.search, num: awaitingApp, lab: 'Awaiting approval' },
       { ic: I.grad, num: active, lab: 'Active students' },
+      { ic: I.link, num: awaitingHandoff, lab: 'Awaiting handoff' },
       { ic: I.alert, num: failed, lab: 'Sync failed' },
     ];
     document.getElementById('kpis').innerHTML = cards.map(c =>
@@ -118,7 +120,7 @@
     const pick = WEBHOOK_POOL[Math.floor(Math.random() * WEBHOOK_POOL.length)];
     document.getElementById('f-name').value = pick.name;
     document.getElementById('f-email').value = pick.email;
-    document.getElementById('f-price').value = 3510;
+    document.getElementById('f-price').value = 2600;
     document.getElementById('f-txn').value = 'PP-' + Date.now() + '-' + Math.floor(Math.random() * 1e6);
     onCreate();
     ui.toast('PayPal webhook simulated — payment approved, System A enrolled ' + pick.name + ', invoice + registration email fired automatically. See the Mailbox.', 'info');
@@ -621,9 +623,29 @@
     syncVal('sec-code-attempts', sec.verifyCodeAttempts);
     syncVal('sec-selfies', sec.retainSelfies || 'untilDecision');
     syncVal('sec-session', sec.sessionTimeoutMinutes || 15);
+    // live posture readout — what the machine is enforcing RIGHT NOW, so the
+    // settings card reads as a designed panel, not a form floating in space
+    const liveEl = document.getElementById('sec-posture-live');
+    if (liveEl) {
+      const bits = [
+        ['Logins', sec.maxLoginAttempts + ' attempts'],
+        ['Lockout', sec.lockoutMinutes + ' min'],
+        ['Codes', sec.verifyCodeAttempts + ' tries'],
+        ['Selfies', (sec.retainSelfies === 'keep' ? 'retained' : 'purged at decision')],
+        ['Session', sec.sessionTimeoutMinutes + ' min'],
+      ];
+      liveEl.innerHTML = '<div class="eyebrow muted" style="margin-bottom:6px;">Enforced right now</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;">' + bits.map(b =>
+        '<div style="padding:9px 11px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,0.015);">' +
+        '<div class="small faint" style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;">' + b[0] + '</div>' +
+        '<div class="small" style="color:var(--gold-bright);font-weight:600;margin-top:2px;">' + b[1] + '</div></div>').join('') + '</div>' +
+        '<p class="small faint" style="margin-top:10px;">These numbers are what every login, code, selfie and session is measured against. Change a value above and press Save — the enforcement uses it immediately.</p>';
+    }
   }
   function doSelfTest() {
     const results = db.securitySelfTest();
+    const prev = document.getElementById('sec-selftest-preview');
+    if (prev) prev.style.display = 'none'; // the live results replace the preview
     const el = document.getElementById('sec-selftest-results');
     el.innerHTML = results.map(r =>
       '<li><span class="a-time">' + (r.pass
@@ -913,6 +935,25 @@
     const m = db.storageMeter();
     const pct = m.percent;
     const warn = pct > 60;
+    // where the store actually lives — one line per record type, measured by
+    // its serialized size, so a staff member can see what weighs the most
+    const raw = localStorage.getItem('rfx_system_a_db_v1') || '';
+    let parts = [];
+    try { parts = JSON.parse(raw); } catch (e) { parts = {}; }
+    const types = [
+      ['Enrollments', parts.enrollments], ['Mailbox', parts.emails], ['Wallets', parts.wallets],
+      ['Audit log', parts.auditLog], ['Security events', parts.securityEvents], ['Support', parts.supportThreads],
+    ];
+    const measured = types.map(t => {
+      const kb = t[1] ? Math.round(JSON.stringify(t[1]).length / 1024 * 10) / 10 : 0;
+      return { lab: t[0], kb };
+    }).sort((a, b) => b.kb - a.kb);
+    const totalKB = Math.max(0.1, measured.reduce((s, t) => s + t.kb, 0));
+    const bars = measured.map(t =>
+      '<div style="display:flex;align-items:center;gap:10px;margin:6px 0;">' +
+      '<span style="width:118px;flex:none;font-size:11px;color:var(--muted);letter-spacing:0.04em;">' + t.lab + '</span>' +
+      '<div style="flex:1;height:6px;border-radius:99px;background:rgba(255,255,255,0.05);overflow:hidden;"><div style="width:' + Math.max(2, Math.round(t.kb / totalKB * 100)) + '%;height:100%;border-radius:99px;background:linear-gradient(90deg,#a8842a,var(--gold));"></div></div>' +
+      '<span style="width:52px;flex:none;text-align:right;font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums;">' + t.kb + ' KB</span></div>').join('');
     el.innerHTML =
       '<div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;">' +
       '<div style="flex:1;height:9px;border-radius:99px;background:rgba(255,255,255,0.06);overflow:hidden;">' +
@@ -924,7 +965,9 @@
       '<dt>Per student</dt><dd>≈ ' + m.perStudentKB + ' KB each</dd>' +
       '<dt>Headroom</dt><dd><b style="color:var(--text);">≈ ' + m.headroomStudents.toLocaleString() + ' more students</b> <span class="faint">at current size</span></dd>' +
       '</dl>' +
-      '<p class="small faint" style="margin-top:10px;">This is the demo\'s browser store (≈5 MB per origin). Production moves to Firebase/Firestore where capacity is effectively unlimited — see FOR-LEE.md.</p>';
+      '<div class="eyebrow muted" style="margin:12px 0 4px;">Where the store lives</div>' +
+      bars +
+      '<p class="small faint" style="margin-top:auto;padding-top:12px;">This is the demo\'s browser store (≈5 MB per origin). Production moves to Firebase/Firestore where capacity is effectively unlimited — see FOR-LEE.md.</p>';
   }
   function doSaveSecurity() {
     const n = v => Math.max(1, parseInt(document.getElementById(v).value, 10) || 1);
@@ -1000,7 +1043,12 @@
       '<option value="24" selected>24 hours</option><option value="48">48 hours</option><option value="72">72 hours</option></select></div>' +
       '<button class="btn btn-gold" id="dp-create">' + (I.gift || '') + ' Create the pass</button>' +
       '<div id="dp-result"></div></div>');
-    m.setTitle('Create a 24-hour demo pass');
+    const setTitle = () => {
+      const h = parseInt(m.el.querySelector('#dp-hours').value, 10) || 24;
+      m.setTitle('Create a ' + h + '-hour demo pass');
+    };
+    m.el.querySelector('#dp-hours').addEventListener('change', setTitle);
+    setTitle();
     m.el.querySelector('#dp-create').addEventListener('click', () => {
       const r = db.createDemoPass({
         name: m.el.querySelector('#dp-name').value,

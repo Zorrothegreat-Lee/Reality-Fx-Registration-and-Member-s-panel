@@ -8,9 +8,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/system.css?v=20260810-71">
+<link rel="stylesheet" href="css/system.css?v=20260816-77">
 </head>
-<body>
+<body class="admin-page">
 <div class="wrap">
   <div class="shell">
     <aside class="sidebar">
@@ -70,13 +70,13 @@
           <div class="grid2">
             <div class="field">
               <label>Course</label>
-              <input class="input" id="f-course" value="Reality Academy — Professional Program">
+              <input class="input" id="f-course" value="Reality FX — CORE">
             </div>
             <div class="field">
               <label>Amount paid <span class="req">*</span></label>
               <div style="display:flex;gap:8px;">
                 <input class="input" id="f-currency" value="R" style="width:52px;text-align:center;">
-                <input class="input" id="f-price" type="number" value="3510" step="0.01">
+                <input class="input" id="f-price" type="number" value="2600" step="0.01">
               </div>
             </div>
           </div>
@@ -120,9 +120,9 @@
       <div class="card" id="pipeline-demo"></div>
 
       <div class="sec-title">Security &amp; data hygiene</div>
-      <div class="grid2" style="align-items:start;">
+      <div class="grid2">
         <!-- posture + settings -->
-        <div class="card">
+        <div class="card" style="display:flex;flex-direction:column;">
           <div class="eyebrow" style="margin-bottom:12px;">Posture &amp; settings</div>
           <ul class="audit" id="sec-posture" style="margin-bottom:18px;"></ul>
           <div class="grid2">
@@ -153,30 +153,39 @@
             </div>
           </div>
           <button class="btn btn-dark btn-sm" id="sec-save" style="margin-top:4px;"><span data-icon="check"></span> Save security settings</button>
-          <p class="small faint" style="margin-top:14px;">These limits are enforced in this demo. In production they are mirrored and enforced server-side — a client can never be the final gatekeeper.</p>
+          <div id="sec-posture-live" style="margin-top:16px;"></div>
+          <p class="small faint" style="margin-top:auto;padding-top:14px;">These limits are enforced in this demo. In production they are mirrored and enforced server-side — a client can never be the final gatekeeper.</p>
         </div>
 
         <!-- data hygiene + events -->
-        <div class="card">
+        <div class="card" style="display:flex;flex-direction:column;">
           <div class="eyebrow" style="margin-bottom:12px;">Data hygiene &amp; events</div>
           <div class="access-locked" id="sec-hygiene" style="margin-bottom:18px;"></div>
           <div class="eyebrow muted" style="margin-bottom:8px;">Recent security events</div>
-          <ul class="audit" id="sec-events"></ul>
+          <ul class="audit" id="sec-events" style="flex:1;min-height:0;overflow-y:auto;max-height:560px;"></ul>
         </div>
       </div>
 
       <!-- live proof: the guards firing + how much the store holds -->
-      <div class="grid2" style="align-items:start;">
-        <div class="card">
+      <div class="grid2">
+        <div class="card" style="display:flex;flex-direction:column;">
           <div class="eyebrow" style="margin-bottom:6px;">Live security self-test</div>
           <p class="small" style="margin-bottom:14px;">Don't take the guards on faith — fire them. This runs the <b style="color:var(--text);">real enforcement code</b> against a scratch record and cleans up after itself. Nothing touches real students.</p>
           <button class="btn btn-ghost btn-sm" id="sec-selftest" style="margin-bottom:14px;"><span data-icon="shield"></span> Run the self-test</button>
-          <ul class="audit" id="sec-selftest-results"><li><span class="a-time">—</span><span class="a-txt faint">Not run yet.</span></li></ul>
+          <div class="eyebrow muted" style="margin-bottom:8px;">The five guards it fires</div>
+          <ul class="audit" id="sec-selftest-preview" style="margin-bottom:14px;">
+            <li><span class="a-time"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;color:var(--gold-bright);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span class="a-txt"><b>Member login lockout</b> — brute-forced logins are refused and the account locks.</span></li>
+            <li><span class="a-time"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;color:var(--gold-bright);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span class="a-txt"><b>Verify-code brute-force guard</b> — repeated wrong codes lock and force a fresh code.</span></li>
+            <li><span class="a-time"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;color:var(--gold-bright);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span class="a-txt"><b>Expired link rejected</b> — a dead registration link is refused, never silently honoured.</span></li>
+            <li><span class="a-time"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;color:var(--gold-bright);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span class="a-txt"><b>Selfie purge after decision</b> — verification selfies are deleted the moment a decision is recorded.</span></li>
+            <li><span class="a-time"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;color:var(--gold-bright);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span class="a-txt"><b>Single-session guard</b> — a new login revokes the old session; one device at a time.</span></li>
+          </ul>
+          <ul class="audit" id="sec-selftest-results" style="flex:1;min-height:0;"><li><span class="a-time">—</span><span class="a-txt faint">Press the button above to see every guard fire, live.</span></li></ul>
         </div>
-        <div class="card">
+        <div class="card" style="display:flex;flex-direction:column;">
           <div class="eyebrow" style="margin-bottom:6px;">Storage capacity</div>
           <p class="small" style="margin-bottom:14px;">How much of the browser store the system is using, and what that means in students.</p>
-          <div id="sec-storage"></div>
+          <div id="sec-storage" style="flex:1;display:flex;flex-direction:column;"></div>
         </div>
       </div>
 
@@ -232,11 +241,11 @@
   </div>
 </div>
 
-<script src="assets/icons.js?v=20260810-71"></script>
-<script src="js/db.js?v=20260810-71"></script>
-<script src="js/ui.js?v=20260810-71"></script>
-<script src="js/pdf.js?v=20260810-71"></script>
-<script src="js/bridge.js?v=20260810-71"></script>
-<script src="js/admin.js?v=20260810-71"></script>
+<script src="assets/icons.js?v=20260816-77"></script>
+<script src="js/db.js?v=20260816-77"></script>
+<script src="js/ui.js?v=20260816-77"></script>
+<script src="js/pdf.js?v=20260816-77"></script>
+<script src="js/bridge.js?v=20260816-77"></script>
+<script src="js/admin.js?v=20260816-77"></script>
 </body>
 </html>
