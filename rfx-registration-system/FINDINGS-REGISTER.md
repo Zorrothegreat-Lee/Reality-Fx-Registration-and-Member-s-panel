@@ -3,7 +3,7 @@
 **Audit Date:** 26 Aug 2026  
 **Engineer:** Lee  
 **Directive:** Final Product Consistency & Student-Journey Hardening  
-**Status:** PHASE 0–4 COMPLETE · PHASE 5–7 PENDING
+**Status:** PHASE 0–7 COMPLETE (AUDIT DONE) · PHASE 2 BLOCKED (AWAITING ZORRO OS VERIFICATION) · NO CODE MODIFICATIONS — AWAITING FOUNDER AUTHORIZATION TO IMPLEMENT
 
 ---
 
@@ -48,7 +48,7 @@
 | F-002 | **Legacy pricing in admin.js defaults** | `js/admin.js:123` | 🔴 | `document.getElementById('f-price').value = 3510;` — hardcoded R3,510 default | Update to new tier price | OPEN — Founder authorization required |
 | F-003 | **Legacy course name hardcoded in admin.html** | `admin.html:73` | 🔴 | `<input id="f-course" value="Reality Academy — Professional Program">` — pre-filled old name | Update to new tier name | OPEN — Founder authorization required |
 | F-004 | **Legacy upgrade catalog entries** | `js/db.js:210-211` | 🔴 | `RFX-UPGRADE-02` "Advanced Program" R6,900; `RFX-UPGRADE-01` "Professional Program" R3,510 | Replace with new tier upgrade paths | OPEN — Founder authorization required |
-| F-005 | **"Quiz" terminology in student-facing copy** | 3 locations | 🟠 | See detailed breakdown below | Replace "quiz/quizzes" with "assessment/assessments" | OPEN — Founder authorization required |
+| F-005 | **"Quiz" terminology in student-facing copy** | 3 locations | 🟠 | See detailed breakdown below | Replace "quiz/quizzes" with "Intelligent Assessment" / "Intelligent Assessments" (per frozen terminology) | OPEN — Founder authorization required |
 | F-006 | **No new tier structure (BASIC/CORE/PRO/ELITE/MASTERY) implemented** | Entire codebase | 🟠 | Zero references to new tier names or prices (R1,500/R2,600/R4,500/R6,000/R10,000) exist anywhere | Implement new tier structure | OPEN — Founder authorization required |
 | F-007 | **index.html (reality-fx-site) contains "quizzes"** | `reality-fx-site/System-A-live/index.html:54` | 🟠 | `"The RFX OS — your lessons, quizzes, laboratory and certificate"` | Replace with "assessments" | OPEN — Founder authorization required |
 
@@ -235,16 +235,31 @@ If the founder observed pricing on a page they identified as "index.html", it ma
 
 ---
 
-## RECOMMENDED NEXT STEPS
+## FOUNDER-LOCKED DECISIONS (26 Aug 08:30 SAST)
 
-1. **Founder confirms** which page showed legacy pricing (to resolve the index.html discrepancy)
-2. **Founder authorizes** which tier becomes the default (BASIC/CORE/PRO/ELITE/MASTERY)
-3. **Lee implements** the new tier structure across db.js, admin.js, admin.html, and catalog
-4. **Lee replaces** all "quiz/quizzes" with "assessment/assessments" in student-facing copy
-5. **Lee verifies** Chapter 1 fix (Phase 2)
-6. **Lee traces** the full student journey with new tier structure (Phase 5)
-7. **Lee audits** package entitlements (Phase 6)
-8. **Lee verifies** enrollment data integrity (Phase 7)
+These are now FROZEN — no further proposals needed:
+
+| Decision | Locked Value |
+|----------|-------------|
+| Commercial tiers | BASIC R1,500 / CORE R2,600 / PRO R4,500 / ELITE R6,000 / MASTERY R10,000 |
+| LIVE tier | **RETIRED** — R1,500 = BASIC |
+| Live/mentoring | **MASTERY ONLY** — never in BASIC/CORE/PRO |
+| Student terminology | **"Intelligent Assessment" / "Intelligent Assessments"** |
+| Internal identifiers | `quizSlides`, `quizQ`, `quizIdx` etc. — leave untouched |
+| Assessment difficulty | Standard / Challenging / Elite (≠ commercial packages) |
+| Entitlement boundary | Tier isolation enforced — no cross-tier privilege leakage |
+
+---
+
+## NEXT STEPS (Updated)
+
+1. **Lee awaits founder authorization** to implement pricing + terminology changes
+2. **Lee implements** new tier structure across db.js, admin.js, admin.html, and catalog
+3. **Lee replaces** all student-facing "quiz/quizzes" with "Intelligent Assessment(s)"
+4. **Zorro verifies** Chapter 1 fix (Phase 2 — OS code in his repo)
+5. **Lee traces** full student journey with new tier structure
+6. **Lee audits** package entitlements (tier isolation proof)
+7. **Lee verifies** enrollment data integrity
 
 ---
 
