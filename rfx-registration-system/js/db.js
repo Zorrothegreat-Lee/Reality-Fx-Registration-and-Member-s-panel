@@ -4882,7 +4882,7 @@ window.RFX = window.RFX || {};
       },
       {
         t: 'What to prepare before you start',
-        b: 'A computer, laptop or phone with a stable internet connection; a quiet space where you can focus; a trading journal (paper or digital — note every trade, the reasoning and the outcome); a calculator and something to write with if you prefer paper notes; and your Student ID + Student Code, which are your permanent identity and appear in your members panel.'
+        b: 'A computer, laptop or phone with a stable internet connection; a quiet space where you can focus; a trading journal (paper or digital — note every trade, the reasoning and the outcome); a calculator and something to write with if you prefer paper notes; and your Student ID + Student Code — both are in this email and are your permanent identity.'
       },
       {
         t: 'The members panel — your account home',
@@ -4937,6 +4937,7 @@ window.RFX = window.RFX || {};
       '<p style="font-family:Arial,sans-serif;font-size:14px;color:#333;">Dear <b>' + escHtml(enr.payment.customerName) + '</b>,</p>' +
       '<p style="font-family:Arial,sans-serif;font-size:14px;color:#333;">Welcome to the <b>Reality FX Academy — ' + ACADEMY_YEAR + '</b>. Your identity is official' +
       (enr.studentId ? ' (' + enr.studentId + ')' : '') + ' and your Academy access is ready.</p>' +
+      (enr.studentCode ? '<div style="background:#f9f6ed;border:1px solid #d4af37;border-radius:10px;padding:16px 20px;margin:14px 0;"><div style="font-family:Arial,sans-serif;font-size:11px;letter-spacing:2px;color:#a8842a;text-transform:uppercase;font-weight:700;">Your Student Code — keep this safe</div><div style="font-family:monospace;font-size:20px;color:#241a05;font-weight:700;margin-top:6px;letter-spacing:3px;">' + escHtml(enr.studentCode) + '</div><div style="font-family:Arial,sans-serif;font-size:12px;color:#666;margin-top:6px;">You need this code to sign in to your Student Portal. It does not change — it is yours for life.</div></div>' : '') +
       '<p style="font-family:Arial,sans-serif;font-size:13px;color:#666;">This letter prepares you for the year — read it once and you will know exactly what to do next.</p>' +
       '<table style="width:100%;border-collapse:collapse;">' + body + '</table>' +
       '<p style="font-family:Arial,sans-serif;font-size:12px;color:#666;margin-top:16px;">' +

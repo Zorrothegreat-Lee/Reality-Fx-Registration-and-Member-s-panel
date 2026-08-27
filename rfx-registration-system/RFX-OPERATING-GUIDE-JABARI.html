@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reality FX — Your Complete Operating Guide</title>
+<style>
+  body { background: #0a0a0a; margin: 0; padding: 32px 12px; font-family: Arial, sans-serif; }
+  .wrap { max-width: 640px; margin: 0 auto; background: #101010; border: 1px solid rgba(212,175,55,.25); border-radius: 16px; overflow: hidden; }
+  .top { border-bottom: 2px solid #d4af37; padding: 26px 34px 18px; background: linear-gradient(180deg, #16130c, #101010); }
+  .crown { font-size: 30px; color: #d4af37; line-height: 1; }
+  .brand { font-family: Georgia, serif; font-size: 24px; font-weight: 700; color: #efe9d8; letter-spacing: 1px; }
+  .brand b { color: #d4af37; }
+  .brand-sub { font-size: 10px; letter-spacing: 4px; color: #8a8577; text-transform: uppercase; margin-top: 4px; }
+  .body { padding: 30px 34px 34px; }
+  .tag { font-family: Georgia, serif; font-style: italic; color: #d4af37; font-size: 15px; margin: 0 0 18px; }
+  .h { font-family: Georgia, serif; font-size: 21px; line-height: 1.35; color: #efe9d8; margin: 0 0 14px; }
+  .p { font-size: 14.5px; line-height: 1.7; color: #c9c3b3; margin: 0 0 16px; }
+  .p b { color: #ffffff; }
+  .gold { color: #d4af37; }
+  .rule { height: 2px; background: linear-gradient(90deg, #d4af37, #f0d98c, #d4af37); margin: 24px 0; }
+  .section-head { font-family: Georgia, serif; font-size: 17px; color: #efe9d8; margin: 28px 0 14px; padding-bottom: 8px; border-bottom: 1px solid rgba(212,175,55,.2); }
+  .section-head .num { color: #d4af37; font-size: 13px; letter-spacing: 2px; margin-right: 8px; }
+  .list { margin: 0 0 18px; padding: 0; list-style: none; }
+  .list li { font-size: 14px; line-height: 1.75; color: #c9c3b3; padding: 7px 0 7px 26px; position: relative; border-bottom: 1px solid rgba(212,175,55,.08); }
+  .list li:last-child { border-bottom: none; }
+  .list li::before { content: "◆"; position: absolute; left: 2px; top: 8px; color: #d4af37; font-size: 10px; }
+  .list li b { color: #ffffff; }
+  .info-box { border: 1px solid rgba(212,175,55,.35); border-radius: 12px; padding: 18px 22px; margin: 18px 0; background: rgba(212,175,55,.04); }
+  .info-box .label { font-size: 10px; letter-spacing: 2.5px; color: #d4af37; text-transform: uppercase; font-weight: 700; margin-bottom: 8px; }
+  .info-box p { font-size: 13.5px; color: #c9c3b3; line-height: 1.65; margin: 0; }
+  .info-box p b { color: #ffffff; }
+  .quote { border-left: 3px solid #d4af37; padding: 10px 16px; margin: 20px 0; font-family: Georgia, serif; font-style: italic; font-size: 15px; line-height: 1.7; color: #e8dcb8; background: rgba(212,175,55,.05); }
+  .room-card { border: 1px solid rgba(212,175,55,.4); border-radius: 14px; padding: 22px 24px; margin: 18px 0; background: linear-gradient(135deg, rgba(212,175,55,.06), rgba(212,175,55,.02)); position: relative; }
+  .room-card .room-num { position: absolute; top: 16px; right: 18px; font-family: Georgia, serif; font-size: 36px; font-weight: 700; color: rgba(212,175,55,.15); line-height: 1; }
+  .room-card .room-title { font-family: Georgia, serif; font-size: 19px; color: #efe9d8; margin-bottom: 4px; }
+  .room-card .room-sub { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #8a8577; margin-bottom: 14px; }
+  .room-card .room-desc { font-size: 14px; line-height: 1.7; color: #c9c3b3; }
+  .room-card .room-desc b { color: #ffffff; }
+  .room-card ul { margin: 10px 0 0; padding: 0; list-style: none; }
+  .room-card ul li { font-size: 13px; line-height: 1.65; color: #c9c3b3; padding: 5px 0 5px 20px; position: relative; }
+  .room-card ul li::before { content: "→"; position: absolute; left: 0; color: #d4af37; font-size: 12px; }
+  .room-card ul li b { color: #ffffff; }
+  .chain-visual { text-align: center; padding: 20px 0; margin: 10px 0 20px; }
+  .chain-visual .chain-step { display: inline-block; padding: 8px 16px; border: 1px solid rgba(212,175,55,.4); border-radius: 8px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: #d4af37; background: rgba(212,175,55,.08); margin: 0 2px; }
+  .chain-visual .chain-arrow { display: inline-block; color: #d4af37; font-size: 16px; margin: 0 6px; vertical-align: middle; }
+  .gate-steps { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+  .gate-step { background: rgba(212,175,55,.04); border: 1px solid rgba(212,175,55,.15); border-radius: 10px; padding: 14px 16px; }
+  .gate-step .gs-num { display: inline-block; width: 22px; height: 22px; border-radius: 50%; background: rgba(212,175,55,.15); border: 1px solid rgba(212,175,55,.4); color: #d4af37; font-size: 11px; font-weight: 700; text-align: center; line-height: 22px; margin-bottom: 6px; }
+  .gate-step .gs-title { font-size: 12.5px; color: #efe9d8; font-weight: 600; margin-bottom: 3px; }
+  .gate-step .gs-desc { font-size: 11.5px; color: #8a8577; line-height: 1.5; }
+  .btn-wrap { text-align: center; margin: 26px 0 8px; }
+  a.btn { display: inline-block; background: linear-gradient(135deg, #f0d98c, #d4af37 45%, #a8842a); color: #241a05; text-decoration: none; font-weight: 700; padding: 14px 34px; border-radius: 10px; font-size: 14px; }
+  .foot { margin-top: 26px; padding-top: 16px; border-top: 1px dashed rgba(212,175,55,.35); font-size: 11px; color: #8a8577; line-height: 1.7; }
+  .foot b { color: #c9c3b3; }
+  .motto { text-align: center; font-family: Georgia, serif; font-style: italic; color: #d4af37; font-size: 14px; margin: 0 0 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="crown">👑</div>
+    <div class="brand">Reality <b>FX</b></div>
+    <div class="brand-sub">The Trading Academy · Complete Operating Guide</div>
+  </div>
+  <div class="body">
+
+    <p class="tag">Welcome, trader — your journey awaits.</p>
+
+    <p class="p">Dear <b>Jabari</b>,</p>
+
+    <p class="p">This is the complete guide to how <b>Reality FX</b> operates — the three rooms, the security behind them, and how your journey flows from the first click to the last candle on a chart. Read this once and you will understand the entire Academy.</p>
+
+    <div class="rule"></div>
+
+    <!-- ============ THE THREE ROOMS ============ -->
+    <div class="section-head"><span class="num">01</span> The Three Rooms</div>
+
+    <p class="p">Reality FX runs as <b>one journey through three rooms</b>. Each room has a specific purpose, and every student follows the same path.</p>
+
+    <div class="chain-visual">
+      <span class="chain-step">Front Desk</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-step">Student Portal</span>
+      <span class="chain-arrow">→</span>
+      <span class="chain-step">RFX OS Academy</span>
+    </div>
+
+    <div class="room-card">
+      <div class="room-num">01</div>
+      <div class="room-title">The Front Desk</div>
+      <div class="room-sub">The website · Where the world meets us</div>
+      <div class="room-desc">
+        The Front Desk is the main front of the business — the first thing anyone sees. It presents the Academy: the courses, the prices, the promise. And it lets someone <b>enrol</b>.
+      </div>
+      <ul>
+        <li><b>Course pages</b> show what the Academy teaches and what each pathway costs</li>
+        <li><b>Enrolment</b> starts the moment a course is paid for and the payment is approved</li>
+        <li><b>After purchase</b>, the system automatically creates your enrolment record, generates an official invoice, and emails it to you</li>
+        <li>You then receive a <b>secure registration link</b> — a unique, time-limited link that carries you into the next room</li>
+      </ul>
+    </div>
+
+    <div class="room-card">
+      <div class="room-num">02</div>
+      <div class="room-title">The Student Portal</div>
+      <div class="room-sub">The campus office · Everything student-related lives here</div>
+      <div class="room-desc">
+        Think of the Student Portal as the main office of a university reception centre. This is where you manage your identity, finances, communications, and support — and where you return every time you need something from the Academy.
+      </div>
+      <ul>
+        <li><b>Identity card</b> — Your Student ID, Student Code, and wallet number (masked by default, revealed with the eye icon)</li>
+        <li><b>RFX wallet & credit</b> — Prize money and referral rewards land here. Credit can buy courses, mentorship, seat transfers, or merch</li>
+        <li><b>Mailbox</b> — Every official notice: invoices, registration links, announcements. Downloadable as files</li>
+        <li><b>Referral link</b> — Share the Academy, earn commission when your friend is fully enrolled</li>
+        <li><b>Live support</b> — Sarrah answers around the clock. When a human is needed, the team takes over</li>
+        <li><b>Trust & standing</b> — Your Trust Bar reflects your conduct. It rises with good behaviour, falls with breaches, and is always reviewed by a moderator</li>
+      </ul>
+    </div>
+
+    <div class="room-card">
+      <div class="room-num">03</div>
+      <div class="room-title">RFX OS Academy</div>
+      <div class="room-sub">The classroom · Where you learn</div>
+      <div class="room-desc">
+        RFX OS is the Academy itself — lessons, progress, Intelligent Assessments, certificates. It is the most protected room in the building because it holds the value of your education.
+      </div>
+      <ul>
+        <li><b>13 chapters</b> across three difficulty lanes — Standard, Challenging, Elite</li>
+        <li><b>Intelligent Assessments</b> — machine-graded, measuring discipline and competence, not luck</li>
+        <li><b>Simulated trading</b> — real markets, real decisions, zero real money at risk</li>
+        <li><b>Workshops & challenges</b> — build strategies, tune them, break them, learn by doing</li>
+        <li><b>Trade journaling & performance tracking</b> — evidence of your progress, kept forever</li>
+        <li><b>Watermarked pages</b> — your Student ID is on every page. Copying is blocked. Printing is a privilege earned by trusted students</li>
+      </ul>
+    </div>
+
+    <div class="info-box">
+      <div class="label">🔒 One student, one account, one active session</div>
+      <p>Signing in on a new device automatically ends your previous session. No need to sign out of old devices — the system does it for you. This protects the value of the education you paid for — for you and every student after you.</p>
+    </div>
+
+    <div class="rule"></div>
+
+    <!-- ============ THE GATE ============ -->
+    <div class="section-head"><span class="num">02</span> The Registration Gate</div>
+
+    <p class="p">Between the Front Desk and the Student Portal stands a registration gate — deliberately, so the Academy knows every single person before they touch any material.</p>
+
+    <div class="gate-steps">
+      <div class="gate-step">
+        <div class="gs-num">1</div>
+        <div class="gs-title">Secure link</div>
+        <div class="gs-desc">Your registration email's link is unique, single-use and time-limited. An expired or used link is refused and a fresh one is issued.</div>
+      </div>
+      <div class="gate-step">
+        <div class="gs-num">2</div>
+        <div class="gs-title">Identity</div>
+        <div class="gs-desc">Name, surname, email, country, phone, address, date of birth — and a verification selfie, captured from camera, mobile or files.</div>
+      </div>
+      <div class="gate-step">
+        <div class="gs-num">3</div>
+        <div class="gs-title">Human check</div>
+        <div class="gs-desc">Email verification with a 6-digit code, plus CAPTCHA. A machine confirms the basics — a person stays part of the review.</div>
+      </div>
+      <div class="gate-step">
+        <div class="gs-num">4</div>
+        <div class="gs-title">Agreements</div>
+        <div class="gs-desc">The exact version of the Terms, Conditions and Fair Usage Policy is recorded, with the exact time of acceptance.</div>
+      </div>
+      <div class="gate-step">
+        <div class="gs-num">5</div>
+        <div class="gs-title">Approval</div>
+        <div class="gs-desc">Staff verify the registration is tied to a genuine paid enrolment. They approve — then a Student ID and Student Code are created.</div>
+      </div>
+      <div class="gate-step">
+        <div class="gs-num">6</div>
+        <div class="gs-title">Handshake</div>
+        <div class="gs-desc">Your approved identity is handed to RFX OS. The Academy confirms receipt — so a network hiccup never creates two identities for one student.</div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <div class="label">🛡️ Until this process completes</div>
+      <p>You hold a <b>demo / under-review</b> profile — never full access. Registration links are tracked, verification codes are brute-force protected, and a failed registration can be re-applied for or resolved to credit or refund — all automated, all recorded.</p>
+    </div>
+
+    <div class="rule"></div>
+
+    <!-- ============ THE MACHINE ============ -->
+    <div class="section-head"><span class="num">03</span> The Machine Behind It All</div>
+
+    <p class="p">Between the Front Desk and the classroom stands an engineered security system — measured live, shown honestly. Nothing is staged; every number is computed by the system.</p>
+
+    <div class="info-box">
+      <div class="label">⚜ The Machinery — Keeping Your Academy Running</div>
+      <p style="margin-bottom:10px;">The engine room runs <b>20 system checks</b> and attacks itself with security self-tests — deliberately, the way an intruder would — so it stays ahead of them.</p>
+      <p><b>20/20</b> system checks green — full audit, every minute</p>
+      <p><b>5/5</b> security attacks defended — the system attacks itself</p>
+      <p><b>35+</b> kinds of security events watched and logged</p>
+      <p><b>&lt;0.01 ms</b> identity lookup — measured live on your device</p>
+    </div>
+
+    <div class="info-box">
+      <div class="label">⛓ The complete student journey</div>
+      <p><b>Payment → Enrolment → Identity → Handshake → Academy.</b> Every step is automated end to end. Staff guide and moderate; the machine carries the load.</p>
+    </div>
+
+    <div class="quote">"Built for pressure: the whole Academy has been simulated at two thousand students at once — every check still passed, every code stayed unique, every rand reconciled."</div>
+
+    <div class="rule"></div>
+
+    <!-- ============ YOUR WALLET ============ -->
+    <div class="section-head"><span class="num">04</span> Your RFX Wallet</div>
+
+    <p class="p">Your wallet holds RFX credit. Here is what it can do:</p>
+
+    <ul class="list">
+      <li><b>Buy another course</b> — upgrade your pathway or enrol in additional programmes</li>
+      <li><b>Book a mentorship session</b> — one-on-one live mentoring with a senior trader (MASTERY tier feature)</li>
+      <li><b>Transfer your seat</b> — pass your seat to one family member instead of losing it (R150 admin fee)</li>
+      <li><b>Buy merch</b> — T-shirts, sweatpants, hoodies, combos</li>
+      <li><b>Cash out prize money</b> — minimum R50, paid in the monthly batch</li>
+    </ul>
+
+    <p class="p" style="font-size:13px;color:#8a8577;">Credit earned through referrals or prizes never expires. It is yours to use on Academy value.</p>
+
+    <div class="rule"></div>
+
+    <!-- ============ THE RULES ============ -->
+    <div class="section-head"><span class="num">05</span> The Rules That Keep Everyone Safe</div>
+
+    <ul class="list">
+      <li><b>One student, one account</b> — sharing or selling access is a breach of the Fair Usage Policy</li>
+      <li><b>One active session</b> — the moment you sign in anywhere new, the previous session ends automatically</li>
+      <li><b>Intelligent Assessments are monitored</b> — unusual timing or perfect-score patterns are reviewed by the moderator</li>
+      <li><b>Refunds end access</b> — a refund request revokes all material rights and starts a re-application cooldown</li>
+      <li><b>Your Trust Bar reflects your standing</b> — good conduct raises it; breaches lower it. Every adjustment is recorded</li>
+    </ul>
+
+    <div class="rule"></div>
+
+    <!-- ============ OUR VALUES ============ -->
+    <div class="section-head"><span class="num">06</span> Our Values</div>
+
+    <p class="p">Reality FX would rather carry a student who is struggling than keep staff who do not meet the standard. That is not a slogan — it is how the system is built.</p>
+
+    <ul class="list">
+      <li><b>Students always get a chance to come back</b> — even if your Trust Bar dips low, the path back is open</li>
+      <li><b>Staff are held to a stricter standard</b> — a team member whose standing falls too far is placed under review</li>
+      <li><b>Every action is recorded</b> — the system never hides the score from the person earning it</li>
+    </ul>
+
+    <div class="quote">"We do not chase fast money. We build slow skill — fast money finds the skilled."</div>
+
+    <div class="rule"></div>
+
+    <!-- ============ GETTING HELP ============ -->
+    <div class="section-head"><span class="num">07</span> Getting Help</div>
+
+    <ul class="list">
+      <li><b>Sarrah (Academy assistant)</b> — available on the Student Portal, around the clock. She answers account questions instantly</li>
+      <li><b>The team</b> — one message away at <b>realityfx20@gmail.com</b> for anything Sarrah cannot handle</li>
+      <li><b>Live support card</b> — in your Student Portal. Message the team directly; they respond in the same card</li>
+    </ul>
+
+    <div class="rule"></div>
+
+    <!-- ============ KEY DATES ============ -->
+    <div class="section-head"><span class="num">08</span> Key Dates</div>
+
+    <div class="info-box" style="text-align:center;">
+      <div class="label">📅 The Academy doors open</div>
+      <p style="font-family:Georgia,serif;font-size:22px;color:#d4af37;font-weight:700;letter-spacing:2px;margin:8px 0;">30 . 09 . 2026</p>
+    </div>
+
+    <div class="info-box" style="text-align:center;margin-top:12px;">
+      <div class="label">⚜ Founder's Day</div>
+      <p style="font-family:Georgia,serif;font-size:22px;color:#d4af37;font-weight:700;letter-spacing:2px;margin:8px 0;">01 . 11 . 2026</p>
+      <p style="font-size:12px;color:#8a8577;margin-top:4px;">The founder's birthday — the Academy honours the person who built this school. The name stays quiet, because the learning is the point.</p>
+    </div>
+
+    <div class="rule"></div>
+
+    <!-- ============ CLOSING ============ -->
+    <div class="info-box" style="text-align:center;border-color:rgba(212,175,55,.5);">
+      <div class="label">⚜ The machine is ready. The family is waiting.</div>
+      <p style="font-family:Georgia,serif;font-style:italic;font-size:16px;color:#f0d98c;margin:8px 0;">Every lesson is a trade. Every trade is a lesson.</p>
+      <p style="margin-top:12px;">You are not being asked to run a school by hand. You are joining a system built so that you can learn with confidence — and a team that has your back, every step of the way.</p>
+    </div>
+
+    <div class="btn-wrap"><a class="btn" href="http://127.0.0.1:8125/member.html">Sign in to your Student Portal →</a></div>
+
+  </div>
+
+  <div class="foot">
+    <p class="motto">Every lesson is a trade. Every trade is a lesson.</p>
+    <b>Reality FX · The Trading Academy</b><br>
+    realityfx20@gmail.com · realityfx.netlify.app<br>
+    This is a personal operating guide for Jabari Chilanga. Keep it safe — it is your map for the year.
+  </div>
+</div>
+</body>
+</html>
