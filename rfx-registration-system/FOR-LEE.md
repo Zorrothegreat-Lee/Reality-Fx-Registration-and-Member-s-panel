@@ -2415,3 +2415,495 @@ the audit still reads 21/21 with zero residue.*
 
 Verified: all 9 pages load with zero console errors, version bumped to v71
 on all 8 pages, shared store clean.
+
+## 9.65 The v72 batch — the OS return-trip base, the portal PWA, and the mobile strategy (System A — built this pass) 🔌📱
+
+**Version:** `20260815-72` on all 8 pages. Audit **21/21**, self-test **5/5**,
+all pages zero console errors.
+
+### 1. THE OS HANDSHAKE LINK — why it pointed at the "old" portal, and the fix
+
+**The symptom (founder's report):** the OS return-trip links ("My RFX
+Account" / "Reception") resolved to `http://127.0.0.1:8124/member.html` — a
+portal the founder read as old.
+
+**The root cause (verified empirically):**
+- The OS stores its academy base in `localStorage.rfx_academy_base`,
+  captured from the origin it *arrived from*. Something on the OS side
+  captured `http://127.0.0.1:8124/` (a legacy demo fork) and never let go.
+- `discoverAcademy()` (os.js) re-adopts the saved base because it is FIRST
+  in the candidate order and still alive — legacy forks 8123/8124 answer
+  `/api/state` and hold the shared store, so the health check stays "live"
+  and never re-resolves. The gate endpoint (`/api/gate`) exists only on the
+  current fork (8125/8126); 8123/8124 predate it and answer `not found`.
+- **No System A data was at risk** — every demo fork shares ONE store file
+  (identical `/api/state` hashes), so "8124" was never a different record,
+  just an older server build.
+
+**The durable fix (OS side — hand to Lee/Zorro):**
+1. `discoverAcademy()` should prefer the fork that answers `/api/gate` (the
+   current fork) over any alive legacy fork, and treat a saved base that
+   lacks the gate as corrigible:
+   - probe each candidate with `/api/gate?email=…` in addition to
+     `/api/state`;
+   - a candidate answering `{"locked":false|true}` outranks one that returns
+     `{"error":"not found"}`;
+   - when the saved base is a legacy fork and a gate-answering fork is live,
+     overwrite `rfx_academy_base` with the gate fork's origin and
+     `wireAcademyLinks()`.
+2. Keep the production rule untouched: OS at `/os/` beside System A uses the
+   relative `../member.html` — ports never exist in production, so this
+   whole class of bug dies at go-live.
+
+**Instant fix for today's session (any OS tab, devtools console):**
+```js
+localStorage.setItem('rfx_academy_base','http://127.0.0.1:8126/'); location.reload();
+```
+(replace 8126 with the current System A origin if it changes). The OS
+re-wires every return link on the next reload.
+
+**Housekeeping done on this pass:** the live preview at 8125 was found
+serving a **stale snapshot** (`20260813-01`, missing the gate/reset/perf
+work — an app-managed server predating the current tree). All three legacy
+forks (8123/8124/8125) were **retired with admin approval** and the current
+build now serves the familiar **`http://127.0.0.1:8125`** — the only System
+A fork left, with the gate live. When the OS's academy link health-check
+finds 8124 gone, its discovery re-points to 8125 automatically (or use the
+one-liner above).
+
+### 2. THE STUDENT PORTAL PWA — System A's answer to Lee's mobile app
+
+Lee is building a native mobile app for the OS (System B). System A's
+answer is deliberately lighter: **the portal is web-first and installable** —
+a PWA with the same spirit as the OS's `rfx-pwa`:
+
+- `manifest.webmanifest` — name "Reality FX — Student Portal",
+  standalone display, black & gold theme, SVG crown icon.
+- `sw.js` — conservative service worker: **HTML is network-first** (the
+  newest build always wins online; the registration page stays open
+  offline), **static assets are stale-while-revalidate**, and `/api/…` is
+  **never** intercepted (the state rail, the gate and the handoff always
+  hit the live server). Cache is versioned per release.
+- Wired into `index.html`, `register.html`, `member.html` (manifest +
+  theme + SW registration).
+- Install affordances: a "Put the portal on your phone" button on the
+  registration-complete screen (`ap-install`) and an "Install app" button
+  on the member panel header (`mp-install`) — they appear only when the
+  browser can actually install (`beforeinstallprompt`), show an
+  iOS Share → Add to Home Screen hint on iPhone/iPad, and hide once
+  installed.
+
+**Why web-first + PWA and not a native portal app:** the portal is thin
+(identity, wallet, mailbox, standing) and its data lives on the server — a
+native app would re-implement what a browser already does, add an App-Store
+review surface for no real gain, and risk the two sides drifting out of
+sync. The OS is where the heavy course content lives — that is exactly what
+Lee's native app should own. The **registration must stay online always**
+(§0 of the go-live brief): it is the front door, it works on any phone
+browser today, and its pages are now offline-tolerant through the PWA
+shell.
+
+**For Lee:** nothing new to deploy on the OS side for this — the portal
+PWA is System A's own files. The OS-side action is item 1 (the discovery
+rule) plus the standing §2.1 always-on hosting.
+
+### 3. Master Key + gate polish (System A)
+
+- **The gate on the Master Key.** The founder's overview card now carries a
+  live gate line ("The gate — open · X ms — every door answers to it, even
+  yours"), probed from the same `/api/gate` endpoint the OS Cloud Function
+  calls. Founder sees the door System A holds, live.
+- **Gate lock pulse.** When the gate answers `locked`, both gate lines (the
+  Machinery card and the Master Key) pulse a soft red (`.gate-locked`, 1.6s
+  ease-in-out) — a closed door is felt, never static.
+- **Gate-aware Academy entry.** The "Enter the Academy" button now checks
+  `loginLockoutStatus` before opening: if the throttle holds the account,
+  the door stays closed with a calm word ("…try again after the countdown,
+  or use Forgot password?") instead of opening onto a session that will be
+  refused. Same rule the OS enforces before minting any session.
+
+### 4. Load test at scale (already in the machine)
+
+`db.simulateLoad(2000)` is the demo harness (seeds 2,000 in-memory
+students, runs the audit + self-test against them, zero residue). It is the
+answer to "can it hold 2,000?" — the FOR-LEE go-live brief §2.5 asks the OS
+side to mirror this against Firestore.
+
+✅ *done when: the OS re-points demo return links to the gate-bearing fork
+automatically; the portal is installable from registration + member panel
+with zero stale-cache risk; the founder's overview shows the live gate; and
+`simulateLoad(2000)` still runs clean.*
+
+---
+
+## §10 — Sweep pass 2026-08-16 (System A, v73)
+
+What this pass changed on System A (all verified live on the current build):
+
+- **Demo-pass badge shows REAL hours.** The register-page header chip previously
+  hardcoded "24h academy pass". It now reads the actual pass length from the
+  enrollment (`48h academy pass · 2d 00:00:00` for a 48-hour tour) — the label,
+  the tooltip, and the countdown all derive from `demoPass.hours`. The admin
+  "Create a demo pass" modal title is dynamic too ("Create a 72-hour demo pass").
+- **Demo verify code is shown on-screen.** In demo mode the 6-digit code is
+  displayed directly on the Verify-email step (plus a resend toast), with honest
+  copy: "Demo mode — no real email is sent … In production the code goes only to
+  your email." Production mode (demoMode:false) never reveals the code.
+- **Student mailbox is newest-first.** The member-panel inbox was `.reverse()`ing
+  an already-newest-first list, flipping it oldest-first. Now it renders as-is,
+  like Gmail.
+- **Credit & Refunds KPIs sit 2,2,2,2.** Six stats became eight (added "Credit
+  issued (30 days)" and "Average credit per account") and the wallet page grid is
+  fixed at 2 columns — no more 2,2,1,1 orphan rows.
+- **Registration funnel no longer kisses the card below.** The funnel card and
+  the reconciliation banner each get explicit bottom margin so the blocks never
+  touch.
+- **Guide link verified.** "Click me — read the guide" is a plain anchor to
+  `operating-guide.html` (serves 200) — no JS intercepts it. If it ever appeared
+  dead, it was the stale preview snapshot, not the page.
+
+✅ *done when: a 48h/72h demo pass shows its real hours in the header badge and
+the admin modal; the demo verify step shows the code + Mailbox note; the member
+inbox is newest-first; the wallet ledger sits 2,2,2,2; the funnel has air below
+it; and the reception guide link opens the operating guide.*
+
+---
+
+## §11 — Responsive sweep + demo-pass E2E (System A, v74)
+
+- **Full responsive sweep — 24/24 clean.** Every page (index, register, member,
+  admin, staff, mailbox, srm, wallet) measured at 360 / 768 / 1440px with zero
+  horizontal overflow. Fixes:
+  - `.main` got `min-width: 0` — the flex console can no longer be pushed wider
+    than the viewport by content (tables scroll inside their cards instead).
+  - `.grid2 > *, .grid3 > *, .kpis > *` got `min-width: 0` — grid children can
+    now shrink; nothing forces a card past the viewport.
+  - `.card:has(.tbl)` becomes the horizontal scroll container — wide tables
+    scroll inside the card, keeping their real layout.
+  - **Sidebar collapses to a horizontal top bar ≤860px** — the 244px rail no
+    longer eats a phone's viewport; the console gets the full width.
+- **Demo-pass journey verified end to end (72h).** Created a fresh 72h pass via
+  `createDemoPass`, then walked the whole wizard live: welcome → details → email
+  verify (code shown on-screen in demo mode + mirrored in Mailbox) → CAPTCHA →
+  identity + selfie → all six agreements → review → submit → staff approval →
+  **RFX-10510** with the badge flipping from "72h academy pass · 3d 00:00:00" to
+  a live "Demo session · 2d 23:58:50" countdown.
+- **Found & fixed a store-state trap:** the shared demo store had `demoMode:
+  false` (flipped during an earlier live-bridge test), which suppressed the
+  on-screen code reveal and the Mailbox copy — the exact "the code never landed
+  in my email" confusion from the founder's test. Restored `demoMode: true` on
+  the demo store; the register flow now behaves as designed.
+
+✅ *done when: all pages pass the 360/768/1440 sweep with 0 overflow; a fresh
+72h demo pass runs the full wizard to approval with correct badge/countdown and
+on-screen code; the demo store ships with `demoMode: true`.*
+
+---
+
+## 12 — v75 polish pass (2026-08-16): consistency everywhere
+
+**What changed this pass, verified live on 8125:**
+
+- **Guide cursive matches the reception.** The operating guide's hero quote
+  ("Welcome, trader — your journey awaits…") was rendering in Cormorant italic
+  while the reception uses Playfair italic. The guide now loads Playfair's
+  italic axis and the quote + founder-note use `--italic: 'Playfair Display'` —
+  one cursive voice across every surface.
+- **"RFX OS Academy — the classroom" cards hover like the rest.** The guide's
+  two-column section cards had no hover; they now lift 4px with a gold border
+  and soft shadow, matching the chain nodes, steps and role cards.
+- **Machinery rings are bigger.** The guide's three rings were 88px with
+  19px numbers — the HEADROOM caption was unreadable. Rings are now 118px,
+  numbers 23px, captions 8.5px, and all three read cleanly.
+- **The guide can get you home.** The ribbon now carries a gold
+  "← Back to the Front Desk" pill (visible on mobile too, where the section
+  crumbs hide).
+- **The empty Mailbox card is full, not empty.** Instead of one grey line, a
+  new mailbox shows what will land, in order — Official invoice, Secure
+  registration link, Verification code & identity, Academy announcements —
+  each with an icon and a one-line description, plus the Open button and the
+  two footer lines. No dead space.
+- **Staff console KPIs sit 2,2,2.** A sixth stat — **Awaiting handoff**
+  (approved, handshake pending) — joins Enrollments / Awaiting registration /
+  Awaiting approval / Active students / Sync failed, and the admin console's
+  KPI grid is pinned to two columns, so six stats are three clean rows.
+- **Demo-tour welcome letter.** New `renderDemoTourEmail` (db.js) — a warm,
+  honest letter explaining what the tour is, what the golden countdown means,
+  and that the registration link stays valid after the tour ends. Sent on
+  every demo-pass creation, newest-first, so it's the first thing the tour
+  student reads. The student mailbox labels it "Tour welcome".
+- **Mobile top-bar nav re-checked:** at ≤860px the 244px sidebar collapses to
+  a sticky horizontal bar; all 7 nav items visible, zero horizontal overflow
+  (already verified at 360/768/1440 in §11, re-confirmed on 700px this pass).
+
+**Version:** `20260816-75` on all 8 pages, SW cache `rfx-portal-20260816-75`.
+
+✅ *done when: guide quote is Playfair italic (same as reception), guide cards
+hover, machinery rings legible at 118px, guide has a back-to-front-desk button,
+empty mailbox shows the "what will land" preview, staff console shows 6 KPIs in
+a 2×2×2 grid, and a fresh demo pass emails the tour welcome letter first.*
+
+---
+
+## 13 — v76 layout-balance pass (2026-08-16): designed grid, no dead zones
+
+**What changed this pass, verified live on 8125:**
+
+- **"The standard · how we operate" is now 6 tiles, not 5.** Added
+  **"Audits are your proof"** — one click runs the 20-check audit and the
+  5 self-tests; staff never need to be developers to know the machine is
+  healthy. Six tiles sit 2×2×2 in a clean grid; the old five left a stray
+  tail.
+- **Live security self-test card expanded to match Storage capacity.**
+  The self-test card was a third the height of its neighbour (283px vs
+  ~470px). It now carries a **"The five guards it fires"** preview list —
+  login lockout, verify-code brute-force guard, expired-link rejection,
+  selfie purge, single-session guard — each with a one-line plain-English
+  description. Pressing **Run the self-test** replaces the preview with the
+  live PASS/FAIL results. Nothing was removed; the card just fills its row.
+- **Storage capacity card filled to match.** It now shows **"Where the
+  store lives"** — a per-record-type breakdown (enrollments, mailbox,
+  wallets, audit log, security events, support) with proportional gold
+  bars and KB figures, measured live from the serialized store. Self-test
+  (473px) and storage (450px) now sit within 23px of each other — a
+  balanced pair, not a short card under a tall one.
+- **Whole-system grid sweep:** wallet KPIs 2,2,2,2 ✓ · admin KPIs 2,2,2 ✓
+  · staff standard 2,2,2 ✓ · reception doors 2×3 ✓ · SRM and guide
+  sections balanced ✓ · zero horizontal overflow at 700px re-confirmed.
+
+**The principle, stated once:** the page is a designed grid, not a pile of
+independent cards. Preserve every piece of information; when two cards sit
+side by side, balance their heights by *adding* relevant content to the
+shorter one — never by stripping the taller one or shrinking padding.
+Sections that would end in a single orphaned card get a sixth/eighth
+meaningful tile so the final row is full. Apply the same rule on the OS
+side: any card pair with a dead zone under one side is a bug.
+
+**Version:** `20260816-76` on all 8 pages, SW cache `rfx-portal-20260816-76`.
+
+✅ *done when: staff standard shows 6 tiles in 2×2×2; self-test and storage
+cards sit within ~25px of each other with the five-guards preview and the
+store-lives breakdown; every other grid in System A ends in a full row.*
+
+---
+
+## 14 — v77 equal-height pass (2026-08-16): no ragged card bottoms
+
+**The complaint:** two admin rows still showed a shorter card beside a taller
+one — dead space under the bottom of the short card. Screenshots showed
+Posture & settings (~1261px) beside Data hygiene & events (~2003px), and the
+self-test beside storage off by ~120px.
+
+**The root cause:** those grid rows carried `align-items:start`, so the two
+cards kept their own natural heights instead of stretching to a shared row
+height — the shorter one always left a hole.
+
+**The fix (verified live, desktop-width forced 2-col):**
+- **Removed `align-items:start`** from the admin security/hygiene row and the
+  self-test/storage row — the grid now stretches each pair to one shared
+  height. Measured: Posture = Hygiene = **1582px** (was 742px apart),
+  Self-test = Storage = **705px** (was 121px apart).
+- **Posture & settings card filled with a live "Enforced right now"
+  readout** — a 5-tile grid showing the actual limits (logins, lockout,
+  codes, selfies, session) plus a one-line explanation, so the expanded card
+  carries real content, not a blank field. The "server-side enforcement"
+  note is anchored to the card bottom.
+- **Self-test / storage footers anchored** to the bottom of their cards
+  (`margin-top:auto`), so an expanded card ends on content, never on air.
+- **Security events list scrolls internally** (max-height 560px) so a long
+  log fills its card without pushing the pair out of balance — the audit
+  card already did this; the events log now follows the same pattern.
+- **Staff console pairs got the same treatment** — Clock in/out | On duty
+  and Wallet | Performance are now equal-height flex columns (they were
+  already pinned to 400px by `body.staff-page`; now their inner lists flex
+  to fill, so no dead zone inside either).
+- **Wallet page re-checked:** all card pairs measure equal (0-9px form-row
+  variance only). SRM's `align-items:end` row is a search form, not cards —
+  untouched.
+
+**The rule, reinforced:** a grid row is ONE unit. Two cards beside each
+other share a row height; the shorter one is *expanded* with real content
+and its footer anchored to the bottom — never left floating, never shrunk.
+
+**Version:** `20260816-77` on all 8 pages, SW cache `rfx-portal-20260816-77`.
+
+✅ *done when: every card pair in System A measures within ~10px of equal at
+desktop width; short cards end on anchored content, never on blank space;
+long logs scroll inside their cards instead of stretching the row.*
+
+## 15 — Dropped-file batch parsed (2026-08-16): APK email fingerprint + recovery-guide ports
+
+The founder's dropped file batch (13–15 Aug) was parsed against the live system:
+
+- **`RFX-APK-DELIVERY-EMAIL.html` (mobile delivery letter):** the SHA-256 fingerprint
+  section shipped with an **all-zeros placeholder** (`0000…0000`). An email telling a
+  student to verify a file against an all-zeros hash must never be sent — it reads as
+  security theatre. The real fingerprint has to come from the actual
+  `RFX-OS-Android.apk` on the machine that holds it (`Get-FileHash` / `shasum -a 256`).
+  Corrected copy shipped to the Desktop as `RFX-APK-DELIVERY-EMAIL-READY.html` with a
+  loud placeholder + the compute command baked in.
+- **`PC-RECOVERY-GUIDE (1).md`:** still told a fresh PC to start **three** demo servers
+  and reach System A on **8123** — but System A collapsed to a single **8125** long ago
+  (8123/8124 retired). Corrected copy shipped as `PC-RECOVERY-GUIDE-UPDATED.md`
+  (two servers: 8125 System A + 49270 OS).
+- **Cross-checked seams — all consistent, no action:**
+  - `/api/gate` answers live off the throttle record ✓ (polish doc §18 claim verified).
+  - `/api/achievement`: the OS demo records locally by design (no HTTP rail on System A
+    in demo — the OS doc says so itself); System A's staff-side claim simulator lives in
+    the wallet page (`claimAchievementMerch`), so nothing is double-minted. The
+    production `POST /api/achievement` rail remains a Lee-side Cloud Function item
+    (§6b, still unchecked below — unchanged).
+  - The mobile design standard's palette matches the live OS `:root` exactly
+    (#0A0A0A / #C9A227 / the gold gradient) ✓.
+  - The OS is live at **v87** — ahead of the dropped polish doc (v75/76), which is
+    just an older snapshot; nothing on System A's side to sync.
+
+No code changes were needed on System A for this batch — it was a documentation
+audit. Corrected letters are on the founder's Desktop.
+
+## 16 — Achievement demo rail now LIVE + APK fingerprint tool (2026-08-16)
+
+Follow-up to §15 — two of its pending items are now done:
+
+- **`POST /api/achievement` is now live on the System A demo fork server** (8125).
+  The OS demo no longer needs to fake it: a real POST `{studentId, average,
+  reference}` is validated exactly like `db.claimAchievementMerch()` — threshold 80
+  (setting-aware), below-threshold → `{ok:false, reason:'below_threshold'}`, unknown
+  student refused, and **idempotent by reference** (retry → `{ok:false, already:true}`,
+  one order ever). On success it mints the `MERCH-xxxx` earned order, writes the
+  mailbox email, the audit event and the `MERCH_EARNED` security event — all through
+  the shared store, so the member wallet + staff merch queue see it instantly.
+  Verified: 5-case battery on a scratch store (below-threshold / unknown / success /
+  idempotent retry / malformed), then live rejection paths on 8125 with the real store
+  untouched (still 1 claim / 1 order). CORS preflight included for cross-origin.
+  Production still replaces the whole server with the Cloud Function (§6b — unchanged).
+- **`fill-apk-fingerprint.sh`** — one command computes the real SHA-256 of
+  `RFX-OS-Android.apk` and patches `RFX-APK-DELIVERY-EMAIL-READY.html`, then refuses
+  to finish unless exactly one real hash and zero placeholders remain. Tested with a
+  dummy APK (hash lands, placeholder gone), then the placeholder was restored. Both
+  files are on the founder's Desktop. **Do not send the letter until the real hash is
+  in** — the zeros placeholder must never ship.
+
+- **Mobile standard vs System A css — audit result: no action needed.**
+  The mobile standard is explicitly "taken verbatim from the OS `:root`" (System B's
+  app palette: #0A0A0A / #C9A227). System A is its own registrar system with its own
+  approved tokens (bg #080808, gold #d4af37, Playfair + Inter, soft gold glows). The
+  *voice* is identical (Playfair italic quotes, gold-on-near-black, pill standard);
+  the exact hex values differ by design and are locked at v77. Aligning System A's
+  gold to the OS gold would be a visual re-skin with no functional benefit — flag to
+  the founder if they want byte-identical gold across both systems, but do not change
+  it unilaterally.
+
+---
+
+## §17 · Security Measures Register — 20 Aug 2026
+
+**The Security Measures Register is now a permanent part of System A.**
+`SECURITY-MEASURES-REGISTER.md` (on Desktop and in `rfx-registration-system/`) is the authoritative inventory of every security measure, its threat, implementation, test evidence, and status.
+
+**40 measures catalogued** across 6 categories: Authentication Authority (15), Access Control (7), Data Protection (6), Audit & Monitoring (5), Network & Transport (3), Production Migration (4).
+
+**1 vulnerability discovered and fixed:** VR-001 — race condition in atomic consume (Attack K). Fork server had no file locking; concurrent requests could both authenticate with the same token. Fixed with `flock(LOCK_EX)`. Retested — atomic consume holds. Production equivalent: Firebase atomic transactions.
+
+**Status breakdown:** 24 TESTED, 10 IMPLEMENTED, 6 DESIGNED (production migration items).
+
+**What Lee must action:**
+1. **SM-A37** — Generate RS256 keypair and build `/api/verify-token` with asymmetric verification
+2. **SM-A38** — Use Firebase atomic transactions for consumed-token tracking
+3. **SM-A39** — Enforce HTTPS + HSTS on both hosts
+4. **SM-A40** — Add security headers (X-Frame-Options, CSP, Referrer-Policy)
+5. **SM-A13** — Implement `rfxAuthGate()` on the OS side (seven frozen invariants)
+6. **SM-A14** — Test all seven frozen invariants individually
+
+**Zorro must:** Build the equivalent register for System B (the OS) — every security measure actually present in the OS codebase, not a copy of System A's list.
+
+
+---
+
+## §18 · Production Verification Requirements — 20 Aug 2026
+
+**When Lee says "Production is done," we do not accept the sentence. We accept evidence.**
+
+The 11 proofs required before System A can move from SECURITY-FROZEN to PROVEN IN PRODUCTION:
+
+### Proof 1 — Legitimate Flow
+```
+Student logs into System A
+  → clicks "Open Reality FX OS"
+  → System A generates RS256-signed JWT (5-min, unique jti)
+  → redirects to OS with ?token=...
+  → OS captures token, scrubs URL immediately
+  → OS calls POST /api/verify-token
+  → System A: signature ✓, claims ✓, jti ✓, enrollment ✓
+  → returns 200 with identity + trust
+  → OS: AUTH populated, OS_SESSION created, TRUST_VERIFIED = true
+  → correct name, ID, trust score displayed
+```
+**Evidence:** Screenshot or recording of the full flow end-to-end.
+
+### Proof 2 — Replay Rejection
+Same token used twice. Second attempt → 409 `replay-detected`.
+**Evidence:** Two curl requests, second returns 409.
+
+### Proof 3 — Expiry Rejection
+Expired token → 401 `invalid-token`.
+**Evidence:** Generate token, wait 5+ minutes (or backdate exp), verify → 401.
+
+### Proof 4 — Signature Tampering
+Modify one character in the payload or signature → 401 `invalid`.
+**Evidence:** Tampered token verification returns 401.
+
+### Proof 5 — Wrong Issuer
+Token with `iss` !== `"reality-fx-system-a"` → 401 `wrong-issuer`.
+**Evidence:** Forged issuer claim rejected.
+
+### Proof 6 — Wrong Audience
+Token with `aud` !== `"reality-fx-os"` → 401 `wrong-audience`.
+**Evidence:** Forged audience claim rejected.
+
+### Proof 7 — Unknown JTI
+Token with a jti that was never issued → 401 `invalid` (not in consumed_tokens).
+**Evidence:** Fabricated jti rejected.
+
+### Proof 8 — Race Condition
+Two simultaneous verification requests with the same token → exactly one succeeds (200), one rejected (409). Never 200 + 200.
+**Evidence:** Concurrent curl requests, results logged.
+
+### Proof 9 — Production Key Isolation
+The RS256 private key is NOT in:
+- Frontend code
+- Git repository
+- Client-side JavaScript
+- Any publicly accessible file
+
+The OS only possesses the public key (or calls the verification endpoint).
+**Evidence:** Repository scan + deployment config review showing key in environment variable only.
+
+### Proof 10 — Fail-Closed on Firebase Unavailable
+If Firebase is unreachable:
+- No new authenticated sessions are created
+- Existing sessions are NOT destroyed (degraded state)
+- The system fails closed, not open
+
+**Evidence:** Firebase disabled/blocked, verify OS behavior.
+
+### Proof 11 — No Internal Error Leakage
+Internal errors (stack traces, database errors, JWT validation details) must never reach the user experience. The student sees a clean message, not a debugging output.
+
+**Evidence:** Trigger error conditions, verify user-facing messages are clean.
+
+---
+
+### The Standard
+
+> **Proof, not assertion.**
+> **Evidence, not claims.**
+> **Tests, not trust.**
+
+When Lee delivers production, we run these 11 checks. Each one gets a ✅ or a ❌ with evidence. No exceptions.
+
+This is the same discipline we've maintained throughout the architecture. The fact that the demo passed 12/12 attacks does not mean production is secure. Production is proven only when production evidence exists.
+
+**SM-A37 through SM-A40 remain DESIGNED until these 11 proofs are delivered.**
+
+— Buffy (System B), 20 August 2026

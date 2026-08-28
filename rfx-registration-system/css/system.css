@@ -30,7 +30,7 @@
   --info-dim: rgba(143, 182, 232, 0.12);
   --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-ui: 'Inter', -apple-system, 'Segoe UI', Arial, sans-serif;
-  --font-quote: 'Cormorant Garamond', Georgia, serif;
+  --font-quote: 'Playfair Display', Georgia, 'Times New Roman', serif; /* the OS cursive standard — Playfair italic carries the Academy's voice */
   --radius: 14px;
   --radius-sm: 9px;
   --shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
@@ -304,6 +304,9 @@ input, select, textarea { font-family: inherit; }
 
 .main {
   flex: 1;
+  min-width: 0; /* inside the flex shell: never let content force the
+                   console wider than the viewport — tables scroll
+                   inside their cards instead */
   padding: 40px clamp(22px, 4vw, 60px);
   max-width: 1240px;
   margin: 0 auto;
@@ -316,6 +319,14 @@ input, select, textarea { font-family: inherit; }
 
 /* ---------- KPI cards ---------- */
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 30px; }
+/* Credit & Refunds — the resolution ledger sits 2 per row, never a stray
+   tail: 8 stats → 2,2,2,2. (Scoped to the wallet page; the admin console
+   keeps its auto-fit band.) */
+body.wallet-page .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 640px) { body.wallet-page .kpis { grid-template-columns: 1fr; } }
+/* Staff console — 6 stats sit 2,2,2, never a stray tail. */
+body.admin-page .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 640px) { body.admin-page .kpis { grid-template-columns: 1fr; } }
 .kpi { padding: 18px 20px; }
 .kpi .kpi-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .kpi .kpi-ic { font-size: 17px; }
@@ -324,6 +335,10 @@ input, select, textarea { font-family: inherit; }
 
 /* ---------- Tables ---------- */
 .tbl { width: 100%; border-collapse: collapse; }
+/* A table can never shrink below its content — on narrow screens the
+   card holding it becomes the horizontal scroll container (the table
+   keeps its real layout; only the overflow scrolls). */
+.card:has(.tbl) { overflow-x: auto; }
 .tbl th {
   text-align: left;
   font-size: 10.5px;
@@ -363,6 +378,12 @@ main > .card + .card,
 main > .card + .grid2,
 main > .grid2 + .card,
 main > .grid2 + .grid2 { margin-top: 26px; }
+/* The reconciliation banner lives BETWEEN the funnel card and the
+   create-enrollment pair, so the adjacent-sibling rule above can't reach
+   them. These give both the same breathing room whether the banner is
+   hidden or shown. */
+#funnel { margin-bottom: 26px; }
+#reconcile { margin-bottom: 26px; }
 
 /* ---------- Timeline (states) ---------- */
 .timeline { display: flex; align-items: flex-start; gap: 0; overflow-x: auto; padding: 6px 0 10px; }
@@ -607,7 +628,47 @@ body.staff-page .grid2 .card::-webkit-scrollbar-thumb { background: rgba(212,175
 .row { display: flex; gap: 16px; flex-wrap: wrap; }
 .col { flex: 1; min-width: 240px; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+/* Grid/flex children default to min-width:auto — they refuse to shrink
+   below their content, which forces cards wider than the viewport on
+   phones. Let them shrink; tables scroll internally instead. */
+.grid2 > *, .grid3 > *, .kpis > * { min-width: 0; }
 @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+
+/* ---------- Responsive shell (narrow screens) ----------
+   The 244px rail eats the whole viewport on a phone, leaving ~100px
+   for the console. Below 860px the sidebar becomes a horizontal top
+   bar: the shell stacks, the rail scrolls sideways, and the console
+   gets the full width. */
+@media (max-width: 860px) {
+  .shell { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .sidebar .brand-logo { width: 132px; flex: none; }
+  .sidebar .brand-tag { display: none; }
+  .sidebar .nav {
+    flex-direction: row;
+    margin-top: 0;
+    flex: none;
+    gap: 4px;
+  }
+  .sidebar .nav-item { white-space: nowrap; padding: 8px 11px; }
+  .sidebar .nav-item .ni-ic { width: auto; }
+  .sidebar .nav-foot { display: none; }
+  .sidebar .nav-academy { margin-left: 4px; }
+}
 
 .kv { display: grid; grid-template-columns: 150px 1fr; gap: 8px 16px; font-size: 13.5px; }
 .kv dt { color: var(--faint); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; padding-top: 1px; }
@@ -1268,4 +1329,12 @@ body.staff-page .grid2 .card::-webkit-scrollbar-thumb { background: rgba(212,175
   .cov-row { grid-template-columns: 44px repeat(24, 1fr); gap: 1.5px; }
   .cov-cell { height: 13px; }
   .cov-day { font-size: 8.5px; }
+}
+
+/* The gate, locked — a soft red pulse so a closed door is felt, never static
+   (System A's own standing, FOR-LEE §9.65) */
+.gate-locked { animation: gateLockPulse 1.6s ease-in-out infinite; }
+@keyframes gateLockPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }

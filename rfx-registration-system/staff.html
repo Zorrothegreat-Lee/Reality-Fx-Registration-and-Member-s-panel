@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/system.css?v=20260810-71">
+<link rel="stylesheet" href="css/system.css?v=20260816-77">
 </head>
 <body class="staff-page">
 <div class="wrap">
@@ -96,35 +96,38 @@
           <div id="duties-list"></div>
         </div>
 
-        <div class="grid2" style="align-items:start;">
-          <div>
-            <div class="card card-gold" id="shift-card">
-              <div class="eyebrow" style="margin-bottom:10px;">Clock in / out</div>
-              <p class="small" id="shift-status" style="margin-bottom:16px;">Not on a shift yet.</p>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;" id="shift-actions">
-                <button class="btn btn-gold" id="btn-clock-day"><span data-icon="clock"></span> Clock in — Day shift</button>
-                <button class="btn btn-ghost" id="btn-clock-night"><span data-icon="clock"></span> Clock in — Night shift</button>
-                <button class="btn btn-danger" id="btn-clock-out" hidden><span data-icon="logout"></span> Clock out</button>
-              </div>
-              <div class="eyebrow muted" style="margin:18px 0 6px;">My recent shifts</div>
-              <ul class="audit" id="my-shifts"></ul>
+        <div class="grid2">
+          <div class="card card-gold" id="shift-card" style="display:flex;flex-direction:column;">
+            <div class="eyebrow" style="margin-bottom:10px;">Clock in / out</div>
+            <p class="small" id="shift-status" style="margin-bottom:16px;">Not on a shift yet.</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;" id="shift-actions">
+              <button class="btn btn-gold" id="btn-clock-day"><span data-icon="clock"></span> Clock in — Day shift</button>
+              <button class="btn btn-ghost" id="btn-clock-night"><span data-icon="clock"></span> Clock in — Night shift</button>
+              <button class="btn btn-danger" id="btn-clock-out" hidden><span data-icon="logout"></span> Clock out</button>
             </div>
-            <div class="card" id="my-wallet-card" style="margin-top:16px;">
-              <div class="eyebrow" style="margin-bottom:6px;">My RFX wallet</div>
-              <p class="small faint" style="margin-bottom:10px;">Funds finance adds to your wallet land here — the same ledger the students have.</p>
-              <div id="my-wallet"></div>
-            </div>
-            <div class="card" id="perf-card" style="margin-top:16px;">
-              <div class="eyebrow" style="margin-bottom:6px;">My performance · staff trust bar</div>
-              <div id="perf-content"></div>
-            </div>
+            <div class="eyebrow muted" style="margin:18px 0 6px;">My recent shifts</div>
+            <ul class="audit" id="my-shifts" style="flex:1;min-height:0;"></ul>
           </div>
 
-          <div class="card">
+          <div class="card" style="display:flex;flex-direction:column;">
             <div class="eyebrow" style="margin-bottom:10px;">On duty right now</div>
             <ul class="audit" id="roster"></ul>
             <div class="eyebrow muted" style="margin:18px 0 6px;">The whole team</div>
-            <ul class="audit" id="team-list"></ul>
+            <ul class="audit" id="team-list" style="flex:1;min-height:0;"></ul>
+          </div>
+        </div>
+
+        <!-- MY MONEY + MY STANDING — wallet and performance sit side by side,
+             one desk, no dead space between them -->
+        <div class="grid2" style="margin-top:16px;">
+          <div class="card" id="my-wallet-card" style="display:flex;flex-direction:column;">
+            <div class="eyebrow" style="margin-bottom:6px;">My RFX wallet</div>
+            <p class="small faint" style="margin-bottom:10px;">Funds finance adds to your wallet land here — the same ledger the students have.</p>
+            <div id="my-wallet" style="flex:1;"></div>
+          </div>
+          <div class="card" id="perf-card" style="display:flex;flex-direction:column;">
+            <div class="eyebrow" style="margin-bottom:6px;">My performance · staff trust bar</div>
+            <div id="perf-content" style="flex:1;"></div>
           </div>
         </div>
 
@@ -202,9 +205,9 @@
   </div>
 </div>
 
-<script src="assets/icons.js?v=20260810-71"></script>
-<script src="js/db.js?v=20260810-71"></script>
-<script src="js/ui.js?v=20260810-71"></script>
-<script src="js/staff.js?v=20260810-71"></script>
+<script src="assets/icons.js?v=20260816-77"></script>
+<script src="js/db.js?v=20260816-77"></script>
+<script src="js/ui.js?v=20260816-77"></script>
+<script src="js/staff.js?v=20260816-77"></script>
 </body>
 </html>

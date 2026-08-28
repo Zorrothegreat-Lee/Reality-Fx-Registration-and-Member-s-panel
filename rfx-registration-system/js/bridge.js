@@ -107,6 +107,9 @@ window.RFX = window.RFX || {};
       enrollmentId: enrollment.id,
       invoice: enrollment.invoice.number,
       course: enrollment.payment.course,
+      // Commercial tier — the OS uses this to enforce programme-specific
+      // access (BASIC/CORE/PRO/ELITE/MASTERY). Source of truth is System A.
+      commercialTier: enrollment.payment.tier || 'CORE',
       // CANONICAL CONTRACT (go-live brief §2.3.5): entitlements is a LIST per
       // identity — a second course MERGES into the record instead of
       // overwriting (the OS reconciles, never treats it as a new person).

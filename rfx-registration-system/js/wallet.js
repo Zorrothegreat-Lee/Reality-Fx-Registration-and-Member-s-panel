@@ -9,6 +9,13 @@
     const expiring = ws.reduce((s, w) => s + db.walletSummary(w.email).expiringSoon, 0);
     const queued = db.payouts().filter(p => p.status === 'queued');
     const paid = db.payouts().filter(p => p.status === 'paid');
+    // credit issued over the last 30 days — every positive movement across
+    // all ledgers (credits, awards, referrals, staff funding)
+    const cut = Date.now() - 30 * 86400 * 1000;
+    const issued30 = ws.reduce((s, w) => s + (w.ledger || [])
+      .filter(e => e.type !== 'redeem' && e.type !== 'cashout' && e.type !== 'clawback' && e.type !== 'repair-offset' && e.amount > 0 && new Date(e.at).getTime() >= cut)
+      .reduce((a, e) => a + e.amount, 0), 0);
+    const avgCredit = ws.length ? totalCredit / ws.length : 0;
     const I = RFX.icons || {};
     const cards = [
       { ic: I.card, num: db.money(totalCredit, 'R'), lab: 'Credit on RFX accounts' },
@@ -17,6 +24,8 @@
       { ic: I.inbox, num: queued.length, lab: 'Refunds & cash-outs queued' },
       { ic: I.send, num: db.money(queued.reduce((s, p) => s + p.amount, 0), 'R'), lab: 'Queued total' },
       { ic: I.checkCircle, num: db.money(paid.reduce((s, p) => s + p.amount, 0), 'R'), lab: 'Paid out (batched)' },
+      { ic: I.award, num: db.money(issued30, 'R'), lab: 'Credit issued (30 days)' },
+      { ic: I.target, num: ws.length ? db.money(avgCredit, 'R') : '—', lab: 'Average credit per account' },
     ];
     document.getElementById('kpis').innerHTML = cards.map(c =>
       '<div class="card kpi"><div class="kpi-top"><span class="kpi-ic">' + c.ic + '</span></div>' +

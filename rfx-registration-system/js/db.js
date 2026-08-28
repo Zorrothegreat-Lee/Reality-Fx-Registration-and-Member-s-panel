@@ -93,7 +93,7 @@ window.RFX = window.RFX || {};
     staffLoginAttempts: {},   // staff email -> { count, lockedUntil }
     staff: [],                // staff members (invite-based, admin-created)
     securityEvents: [],       // { at, event, detail } — lockouts, purges, etc.
-    rfxOsEndpoint: 'http://127.0.0.1:49270/os/api/handoff', // Lee's system (System B)
+    rfxOsEndpoint: 'https://os.realityfx.com/os/api/handoff', // Production OS — never localhost in production
     // Count privacy — the ghost-town rule. Reality FX never shows raw student
     // counts on any STUDENT-FACING surface until the Academy reaches this
     // number of ACTIVE students. A tiny school is nobody's business but ours:
@@ -1102,7 +1102,26 @@ window.RFX = window.RFX || {};
     const mail = { id: nextId('email', 'EM-', 4), kind, to, subject, html, sentAt: now(), read: false };
     state.emails.unshift(mail);
     save();
+    // Fire-and-forget: deliver the email via Resend Cloud Function.
+    // The localStorage record stays for the member-panel mailbox display;
+    // the Cloud Function delivers it to the real inbox.
+    deliverEmail(to, subject, html);
     return mail;
+  }
+  /* Production email delivery — calls the sendEmail Cloud Function.
+     Fire-and-forget: failures are logged but never block the UI.
+     In demo/local mode (no Cloud Function), this silently does nothing. */
+  function deliverEmail(to, subject, html) {
+    const SEND_EMAIL_ENDPOINT = 'https://us-central1-reality-fx-production-25796.cloudfunctions.net/sendEmail';
+    try {
+      fetch(SEND_EMAIL_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to, subject, html }),
+      }).then(function (r) { return r.json(); }).then(function (d) {
+        if (!d.ok) console.warn('Email delivery failed:', d.error);
+      }).catch(function () { /* demo/offline — no delivery, no error */ });
+    } catch (e) { /* no delivery in demo mode */ }
   }
   function emails() { return (state.emails || []).slice(); }
   function markEmailRead(id) {
@@ -1120,7 +1139,7 @@ window.RFX = window.RFX || {};
      Accepts either the API form (…/api/handoff) or a page URL directly,
      and strips any trailing slash before appending the page. */
   function osIndexUrl() {
-    let ep = String(state.rfxOsEndpoint || 'http://127.0.0.1:49270/os/api/handoff').trim();
+    let ep = String(state.rfxOsEndpoint || 'https://os.realityfx.com/os/api/handoff').trim();
     if (ep.indexOf('/api/') !== -1) ep = ep.split('/api/')[0];
     ep = ep.replace(/\/+$/, '');
     if (/\.html?($|[?#])/.test(ep)) return ep;          // already a page URL
@@ -3094,6 +3113,10 @@ window.RFX = window.RFX || {};
         customerName: (payment.customerName || '').trim(),
         email: (payment.email || '').trim().toLowerCase(),
         course: payment.course || state.course.name,
+        // Commercial tier — the source of truth. The OS receives this via the
+        // auth gate and enforces programme-specific access. Staff set it in
+        // the admin form; fallback to the default course tier.
+        tier: payment.tier || state.course.tier || 'CORE',
         // price must be a positive number — a negative or NaN price would let
         // a refund or credit move money the wrong way. Fall back to the course
         // price rather than accept bad input.

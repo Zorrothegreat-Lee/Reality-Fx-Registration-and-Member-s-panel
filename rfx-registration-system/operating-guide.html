@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #080808;
@@ -24,7 +24,7 @@
     --ok: #7ee2a4;
     --warn: #f0a89c;
     --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
-    --italic: 'Cormorant Garamond', Georgia, serif;
+    --italic: 'Playfair Display', Georgia, 'Times New Roman', serif;
     --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -49,7 +49,14 @@
   .ribbon-in { max-width: 1080px; margin: 0 auto; padding: 12px 28px; display: flex; align-items: center; gap: 14px; }
   .ribbon .mark { color: var(--gold); font-family: var(--serif); font-weight: 700; font-size: 17px; letter-spacing: 0.5px; }
   .ribbon .mark small { display: block; font-family: var(--sans); font-size: 8.5px; letter-spacing: 3px; color: var(--faint); font-weight: 500; }
-  .ribbon .crumbs { margin-left: auto; display: flex; gap: 18px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .ribbon .back {
+    margin-left: auto; display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 99px; border: 1px solid rgba(212,175,55,0.5);
+    color: var(--gold-bright); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600;
+    text-decoration: none; transition: all 0.25s;
+  }
+  .ribbon .back:hover { background: rgba(212,175,55,0.12); box-shadow: 0 0 0 1px rgba(212,175,55,0.3), 0 10px 26px -12px rgba(212,175,55,0.55); }
+  .ribbon .crumbs { margin-left: 18px; display: flex; gap: 18px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
   .ribbon .crumbs a { color: inherit; text-decoration: none; transition: color 0.25s; }
   .ribbon .crumbs a:hover { color: var(--gold-bright); }
   @media (max-width: 720px) { .ribbon .crumbs { display: none; } }
@@ -106,6 +113,10 @@
   .card {
     background: linear-gradient(180deg, var(--panel2), var(--panel));
     border: 1px solid var(--border); border-radius: 16px; padding: 26px;
+    transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), border-color 0.3s, box-shadow 0.3s;
+  }
+  .grid2 .card:hover {
+    transform: translateY(-4px); border-color: rgba(212,175,55,0.45); box-shadow: 0 14px 40px -18px rgba(212,175,55,0.35);
   }
   .card.gold { border-color: rgba(212,175,55,0.45); }
   .card .ic { width: 40px; height: 40px; color: var(--gold-bright); margin-bottom: 14px; display: flex; }
@@ -151,7 +162,7 @@
   .machinery .m-sub { color: var(--faint); font-size: 12.5px; margin-bottom: 26px; }
   .machine-rings { display: flex; gap: 34px; align-items: center; flex-wrap: wrap; margin-bottom: 26px; }
   .m-ring { text-align: center; position: relative; }
-  .m-ring svg { width: 88px; height: 88px; transform: rotate(-90deg); }
+  .m-ring svg { width: 118px; height: 118px; transform: rotate(-90deg); }
   .m-ring .tr-track { fill: none; stroke: rgba(255,255,255,0.07); stroke-width: 7; }
   .m-ring .tr-fill { fill: none; stroke-width: 7; stroke-linecap: round; stroke: url(#ringGrad);
     stroke-dasharray: 226; stroke-dashoffset: 226; animation: drawRing 1.1s cubic-bezier(0.22,1,0.36,1) 0.3s forwards;
@@ -159,8 +170,8 @@
        the drawn stroke, never a box */
     filter: url(#ringGlow); }
   .m-ring .m-pct { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .m-ring .m-pct b { font-family: var(--serif); font-size: 19px; color: var(--gold-bright); }
-  .m-ring .m-pct span { font-size: 7.5px; letter-spacing: 1.5px; color: var(--faint); text-transform: uppercase; }
+  .m-ring .m-pct b { font-family: var(--serif); font-size: 23px; color: var(--gold-bright); }
+  .m-ring .m-pct span { font-size: 8.5px; letter-spacing: 1.2px; color: var(--faint); text-transform: uppercase; white-space: nowrap; }
   @keyframes drawRing { to { stroke-dashoffset: var(--off, 0); } }
   .machine-stats { display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; }
   .machine-stats .row { display: flex; align-items: baseline; gap: 10px; }
@@ -247,6 +258,7 @@
 <div class="ribbon">
   <div class="ribbon-in">
     <div class="mark">REALITY FX<small>THE TRADING ACADEMY</small></div>
+    <a class="back" href="index.html">← Back to the Front Desk</a>
     <div class="crumbs">
       <a href="#map">Map</a>
       <a href="#desk">Front Desk</a>

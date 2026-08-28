@@ -639,13 +639,15 @@
     credit: ['RFX credit', 'ok'], refund: ['Refund', 'warn'], reapply: ['Re-application', 'info'],
     cashout: ['Cash-out', 'gold'], 'finance-report': ['Finance audit', 'info'], 'staff-fund': ['Staff funding', 'ok'], 'staff-invite': ['Staff invite', 'info'],
     merch: ['Merch', 'gold'], 'prep-guide': ['Prep guide', 'info'], 'operating-guide': ['Operating guide', 'info'], support: ['Support', 'info'],
-    birthday: ['Happy birthday', 'gold'],
+    'demo-tour': ['Tour welcome', 'gold'], birthday: ['Happy birthday', 'gold'],
   };
   let mailSelected = null;
   let mailViewOpen = false;
   function studentMail() {
     const mine = String(enr.payment.email || '').toLowerCase();
-    return db.emails().filter(m => String(m.to || '').toLowerCase() === mine).slice().reverse(); // newest first
+    // db.emails() is already newest-first (every email is unshifted to the
+    // front) — render as-is so the inbox reads like Gmail: newest on top.
+    return db.emails().filter(m => String(m.to || '').toLowerCase() === mine);
   }
   function mailboxCard() {
     const I = RFX.icons || {};
@@ -670,7 +672,12 @@
       '<span class="eyebrow muted" style="margin-bottom:0;">Mailbox</span>' +
       (unread ? '<span class="pill gold" style="font-size:9px;">' + unread + ' unread</span>' : '') +
       '<span class="small" style="margin-left:auto;color:var(--gold);">&rarr;</span></div>' +
-      (rows || '<p class="small faint">Nothing here yet — your invoice, registration link and Academy announcements will land here.</p>') +
+      (rows || '<div style="border-top:1px solid var(--border);padding-top:4px;">' +
+        '<div class="small faint" style="margin:6px 0 8px;">Nothing here yet — this is what will land, in order:</div>' +
+        '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);"><span class="ic" style="flex:none;color:var(--gold-bright);">' + (I.doc || '') + '</span><div style="flex:1;min-width:0;"><div class="small" style="color:var(--text);font-weight:600;">Official invoice</div><div class="small faint" style="font-size:10px;">proof of your enrolment, ready to download</div></div></div>' +
+        '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);"><span class="ic" style="flex:none;color:var(--gold-bright);">' + (I.link || '') + '</span><div style="flex:1;min-width:0;"><div class="small" style="color:var(--text);font-weight:600;">Secure registration link</div><div class="small faint" style="font-size:10px;">single-use and time-limited — the gate to your journey</div></div></div>' +
+        '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);"><span class="ic" style="flex:none;color:var(--gold-bright);">' + (I.shieldCheck || I.shield || '') + '</span><div style="flex:1;min-width:0;"><div class="small" style="color:var(--text);font-weight:600;">Verification code &amp; identity</div><div class="small faint" style="font-size:10px;">your 6-digit code and identity confirmations</div></div></div>' +
+        '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;"><span class="ic" style="flex:none;color:var(--gold-bright);">' + (I.flag || I.calendar || '') + '</span><div style="flex:1;min-width:0;"><div class="small" style="color:var(--text);font-weight:600;">Academy announcements</div><div class="small faint" style="font-size:10px;">events, dates and briefings that matter to you</div></div></div></div>') +
       '<div style="margin-top:12px;"><button class="btn btn-gold btn-sm" style="width:100%;" onclick="event.stopPropagation();RFX.memberOpenMailbox()">' + (I.mail || I.inbox || '') + ' Open your mailbox</button></div>' +
       '<p class="small faint" style="margin-top:9px;">The only channel the Academy uses for official notices.</p>' +
       '<p class="small faint" style="margin-top:2px;">Every message can be downloaded as a file.</p></div>';
@@ -1151,31 +1158,44 @@
      a staged label — if the server is unreachable the line says so plainly. */
   let gateProbeAt = 0;
   function probeGate() {
-    const lab = document.getElementById('mach-gate');
-    if (!lab || !enr) return;
+    const labs = [];
+    const mach = document.getElementById('mach-gate');
+    const mk = document.getElementById('mk-gate');
+    if (mach) labs.push(mach);
+    if (mk) labs.push(mk);
+    if (!labs.length || !enr) return;
     const nowMs = Date.now();
     if (nowMs - gateProbeAt < 8000) return; // once per ~8s, never per 2.5s poll
     gateProbeAt = nowMs;
     const email = (enr.payment && enr.payment.email) || '';
     const t0 = performance.now();
-    const settle = (txt) => { if (lab) { lab.innerHTML = txt; lab.title = 'The gate answers from System A\'s own throttle record — the same record the sign-in screen enforces.'; } };
+    const settle = (txt, locked) => {
+      labs.forEach(function (lab) {
+        lab.innerHTML = txt;
+        lab.title = 'The gate answers from System A\'s own throttle record — the same record the sign-in screen enforces.';
+        // a locked gate pulses — the standing feels alive, never static
+        if (locked) lab.classList.add('gate-locked'); else lab.classList.remove('gate-locked');
+      });
+    };
     try {
       fetch('/api/gate?email=' + encodeURIComponent(email), { cache: 'no-store' })
         .then(function (r) { return r.json(); })
         .then(function (g) {
           const ms = (performance.now() - t0).toFixed(1);
-          settle((g && g.locked)
+          const locked = !!(g && g.locked);
+          settle(locked
             ? '<span style="color:#f0a89c;">locked</span> · <span class="faint">' + ms + ' ms</span> — try again after the countdown, or use Forgot password?'
-            : '<span style="color:#7ee2a4;">open</span> · <span class="faint">' + ms + ' ms</span> — your identity is cleared');
+            : '<span style="color:#7ee2a4;">open</span> · <span class="faint">' + ms + ' ms</span> — your identity is cleared', locked);
         })
-        .catch(function () { settle('<span style="color:#c9b57a;">unreachable</span> — local read stands in'); });
-    } catch (e) { settle('<span style="color:#c9b57a;">unreachable</span> — local read stands in'); }
+        .catch(function () { settle('<span style="color:#c9b57a;">unreachable</span> — local read stands in', false); });
+    } catch (e) { settle('<span style="color:#c9b57a;">unreachable</span> — local read stands in', false); }
   }
   function accessCard() {
     const I = RFX.icons || {};
-    // The Academy entry point (derived once, in db.osIndexUrl). Passing ?sid=
-    // lets the Academy greet the student by their identity.
-    const osUrl = db.osIndexUrl() + '?sid=' + encodeURIComponent(enr.studentId || '');
+    // The Academy entry point — goes through the production auth gate (openOs
+    // Cloud Function) which issues a short-lived RS256 JWT and redirects to
+    // the OS with ?token=.  The OS then verifies via /api/verify-token.
+    const osUrl = db.osAuthUrl(enr.payment && enr.payment.email);
     let body;
     if (db.demoTourExpired(enr)) {
       // The 24h free tour has run out — the game-style moment. The tour gave
@@ -1259,7 +1279,7 @@
       { href: 'admin.html', ic: I.shield || '', t: 'Admin console', d: 'Enrollments, audit & finance' },
       { href: 'wallet.html', ic: I.wallet || '', t: 'Wallet centre', d: 'Credit, payouts & wages' },
       { href: regHref, ic: I.doc || '', t: 'Registration desk', d: 'The gate, as students see it' },
-      { href: db.osIndexUrl() + '?sid=' + encodeURIComponent(enr.studentId || ''), ic: I.unlock || '', t: 'RFX OS Academy', d: 'The learning environment' },
+      { href: db.osAuthUrl(enr.payment && enr.payment.email), ic: I.unlock || '', t: 'RFX OS Academy', d: 'The learning environment' },
     ];
     // six doors, no orphans: a fixed 3×2 grid on wide screens, 2×3 on
     // tablets, 1×6 on phones — every door equal, every gap equal
@@ -1273,7 +1293,8 @@
       '<span class="ic" style="color:var(--gold-bright);">' + (I.key || I.lock || '') + '</span>' +
       '<span class="eyebrow gold" style="margin-bottom:0;">The Master Key — founder overview</span></div>' +
       '<p class="small faint" style="margin-bottom:12px;">Every door, from anywhere — no console is locked to the person who built them all. Step in, look, step out; you see exactly what staff and students see.</p>' +
-      '<div class="mk-doors">' + tiles + '</div></div>';
+      '<div class="mk-doors">' + tiles + '</div>' +
+      '<div class="small" style="margin-top:12px;">The gate <b class="mono gold" id="mk-gate">checking…</b> — every door answers to it, even yours</div></div>';
   }
 
   /* Referral marketing — the student's own shareable code, their tier and
@@ -1787,6 +1808,16 @@
     if (!btn) return;
     if (osProbeState === 'up') return; // confirmed online — native link wins
     e.preventDefault();
+    // gate-aware handoff: the Academy only opens for a clear identity. If the
+    // throttle holds this account, the door stays closed with a calm word —
+    // same rule the OS enforces before issuing any session (FOR-LEE §9.61).
+    try {
+      const gs = db.loginLockoutStatus ? db.loginLockoutStatus((enr.payment && enr.payment.email) || '') : null;
+      if (gs && gs.locked) {
+        ui.toastWarn('The gate is temporarily closed for this account right now — try again after the countdown, or use Forgot password? to recover.');
+        return;
+      }
+    } catch (e2) { /* local read unavailable — the OS probe decides below */ }
     if (osProbing) return; // one probe in flight — ignore double-clicks
     osProbing = true;
     if (osProbeState === 'down') {
@@ -1794,7 +1825,7 @@
     } else {
       ui.toastWarn('Checking the Academy link…');
     }
-    probeOs(function () { osProbing = false; ui.toastOk('The Academy is online — opening it for you now.'); window.open(db.osIndexUrl() + '?sid=' + encodeURIComponent(enr.studentId || ''), '_blank'); },
+    probeOs(function () { osProbing = false; ui.toastOk('The Academy is online — opening it for you now.'); window.open(db.osAuthUrl(enr.payment && enr.payment.email), '_blank'); },
       function () { osProbing = false; ui.toastWarn('The Academy is being repaired right now — our engineers are on it. Your access is safe and waiting for you.'); });
   });
 
@@ -1832,6 +1863,7 @@
 
   /* ---------------- init ---------------- */
   function boot() {
+    wirePwaInstall();
     $('m-login').addEventListener('click', doLogin);
     $('m-email').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
     $('m-code').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
@@ -2029,5 +2061,37 @@
   RFX.memberDownloadPdf = doDownloadPdf;
   RFX.memberPrepGuidePdf = doPrepGuidePdf;
   RFX.memberPrepGuideEmail = doPrepGuideEmail;
+
+  /* PWA INSTALL — the portal installs like an app on any phone. The button
+     appears only when the browser can actually install (beforeinstallprompt),
+     or on iPhone/iPad where Share → Add to Home Screen is the path, and hides
+     itself once the app is installed. */
+  let deferredInstall = null;
+  function wirePwaInstall() {
+    const btn = document.getElementById('mp-install');
+    if (!btn) return;
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent || '');
+    const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+    if (standalone) return; // already running as an installed app
+    const showBtn = () => { btn.style.display = ''; };
+    const hideBtn = () => { btn.style.display = 'none'; };
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      deferredInstall = e;
+      showBtn();
+    });
+    btn.addEventListener('click', function () {
+      if (deferredInstall) {
+        deferredInstall.prompt();
+        deferredInstall.userChoice.then(function () { deferredInstall = null; hideBtn(); }).catch(function () {});
+      } else if (ios) {
+        ui.toastWarn('On iPhone/iPad: tap Share, then “Add to Home Screen” — the portal installs like an app.');
+      } else {
+        ui.toastOk('Open the browser menu → “Install app” to put the portal on your home screen.');
+      }
+    });
+    window.addEventListener('appinstalled', hideBtn);
+    if (ios) showBtn(); // iOS cannot prompt — the hint is the path
+  }
   boot();
 })();
