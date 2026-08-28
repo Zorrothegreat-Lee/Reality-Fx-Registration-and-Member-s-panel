@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reality FX — Payment Status</title>
+<link rel="icon" href="assets/favicon.svg">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0e0d0a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/system.css?v=20260828">
+<style>
+  .result-box {
+    max-width: 520px;
+    margin: 60px auto;
+    text-align: center;
+    background: rgba(16,16,16,0.95);
+    border: 1px solid rgba(201,162,39,0.25);
+    border-radius: 16px;
+    padding: 48px 36px;
+  }
+  .result-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 36px;
+  }
+  .result-icon.success {
+    background: rgba(126,226,164,0.12);
+    border: 2px solid rgba(126,226,164,0.4);
+  }
+  .result-icon.pending {
+    background: rgba(229,193,88,0.12);
+    border: 2px solid rgba(229,193,88,0.4);
+  }
+  .result-icon.cancelled {
+    background: rgba(240,168,156,0.12);
+    border: 2px solid rgba(240,168,156,0.4);
+  }
+  .result-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: #E5E5E5;
+    margin-bottom: 12px;
+  }
+  .result-text {
+    font-size: 14px;
+    color: #b9b2a2;
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  .result-id {
+    font-family: monospace;
+    font-size: 12px;
+    color: #888;
+    padding: 10px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 6px;
+    margin-bottom: 20px;
+  }
+  .action-btn {
+    display: inline-block;
+    padding: 13px 30px;
+    background: linear-gradient(135deg, #f0d98c, #d4af37 45%, #a8842a);
+    color: #241a05;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: opacity 0.2s;
+  }
+  .action-btn:hover { opacity: 0.9; }
+  .action-btn.secondary {
+    background: rgba(255,255,255,0.06);
+    color: #E5C158;
+    border: 1px solid rgba(201,162,39,0.3);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-inner">
+      <div style="display:flex;justify-content:center;margin-bottom:16px;">
+        <img src="assets/logo.svg" alt="Reality FX" class="brand-logo" style="width:220px;">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="result-box" id="result-box">
+      <div class="result-icon" id="result-icon">⏳</div>
+      <div class="result-title" id="result-title">Processing your payment...</div>
+      <div class="result-text" id="result-text">Please wait while we confirm your payment.</div>
+      <div class="result-id" id="result-id"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var params = new URLSearchParams(window.location.search);
+  var status = (params.get('status') || '').toLowerCase();
+  var id = params.get('id') || '';
+
+  var icon = document.getElementById('result-icon');
+  var title = document.getElementById('result-title');
+  var text = document.getElementById('result-text');
+  var idBox = document.getElementById('result-id');
+
+  if (id) {
+    idBox.textContent = 'Payment Reference: ' + id;
+  }
+
+  if (status === 'success') {
+    icon.textContent = '✅';
+    icon.className = 'result-icon success';
+    title.textContent = 'Payment Received';
+    title.style.color = '#7ee2a4';
+    text.innerHTML = 'Your payment has been received and is being processed. You will receive a registration email shortly with your login details.<br><br>If you do not receive an email within 15 minutes, please check your spam folder or contact us at <b>realityfx20@gmail.com</b>.';
+    // Add action buttons
+    text.innerHTML += '<div style="margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">' +
+      '<a href="member.html" class="action-btn">Go to Student Portal →</a>' +
+      '<a href="index.html" class="action-btn secondary">Back to Reception</a>' +
+      '</div>';
+  } else if (status === 'cancelled') {
+    icon.textContent = '✕';
+    icon.className = 'result-icon cancelled';
+    title.textContent = 'Payment Cancelled';
+    title.style.color = '#f0a89c';
+    text.innerHTML = 'You cancelled the payment. No money has been deducted.<br><br>You can try again whenever you are ready.';
+    text.innerHTML += '<div style="margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">' +
+      '<a href="payment.html" class="action-btn">Choose Programme Again</a>' +
+      '<a href="index.html" class="action-btn secondary">Back to Reception</a>' +
+      '</div>';
+  } else {
+    icon.textContent = '⏳';
+    icon.className = 'result-icon pending';
+    title.textContent = 'Processing...';
+    text.textContent = 'Please wait while we confirm your payment status.';
+  }
+})();
+</script>
+</body>
+</html>

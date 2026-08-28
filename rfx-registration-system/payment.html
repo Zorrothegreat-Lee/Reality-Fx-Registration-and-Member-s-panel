@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reality FX — Enrol Now</title>
+<meta name="description" content="Choose your Reality FX programme and secure your place. Payment is processed securely through Payfast.">
+<link rel="icon" href="assets/favicon.svg">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0e0d0a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/system.css?v=20260828">
+<style>
+  .programme-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  .programme-card {
+    background: rgba(16,16,16,0.95);
+    border: 1px solid rgba(201,162,39,0.2);
+    border-radius: 14px;
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+    cursor: pointer;
+  }
+  .programme-card:hover {
+    border-color: rgba(201,162,39,0.6);
+    box-shadow: 0 8px 30px rgba(201,162,39,0.15);
+    transform: translateY(-3px);
+  }
+  .programme-card.selected {
+    border-color: #E5C158;
+    box-shadow: 0 0 20px rgba(229,193,88,0.25);
+  }
+  .programme-card.recommended {
+    border-color: rgba(201,162,39,0.5);
+    position: relative;
+  }
+  .programme-card.recommended::before {
+    content: '★ MOST POPULAR';
+    position: absolute;
+    top: -11px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #f0d98c, #d4af37);
+    color: #0e0d0a;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    padding: 3px 14px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .tier-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #E5C158;
+    margin-bottom: 4px;
+  }
+  .tier-tagline {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 16px;
+  }
+  .tier-price {
+    font-size: 32px;
+    font-weight: 700;
+    color: #E5E5E5;
+    margin-bottom: 4px;
+  }
+  .tier-price .currency {
+    font-size: 18px;
+    font-weight: 500;
+    color: #888;
+  }
+  .tier-features {
+    list-style: none;
+    padding: 0;
+    margin: 16px 0 0;
+    flex: 1;
+  }
+  .tier-features li {
+    font-size: 13px;
+    color: #b9b2a2;
+    padding: 5px 0;
+    padding-left: 22px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .tier-features li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: #7ee2a4;
+    font-weight: 700;
+  }
+  .tier-features li.not-included {
+    color: #555;
+  }
+  .tier-features li.not-included::before {
+    content: '—';
+    color: #444;
+  }
+  .enrol-btn {
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+    padding: 13px;
+    background: linear-gradient(135deg, #f0d98c, #d4af37 45%, #a8842a);
+    color: #241a05;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    text-align: center;
+    text-decoration: none;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .enrol-btn:hover { opacity: 0.9; }
+  .enrol-btn:disabled {
+    background: #333;
+    color: #666;
+    cursor: not-allowed;
+  }
+  .payment-form-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .payment-form-overlay.active { display: flex; }
+  .payment-form-box {
+    background: #101010;
+    border: 1px solid rgba(201,162,39,0.3);
+    border-radius: 14px;
+    padding: 32px;
+    max-width: 480px;
+    width: 90%;
+  }
+  .payment-form-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: #E5C158;
+    margin: 0 0 20px;
+  }
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 4px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .field input {
+    width: 100%;
+    padding: 11px 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    color: #E5E5E5;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    box-sizing: border-box;
+  }
+  .field input:focus {
+    outline: none;
+    border-color: #E5C158;
+    box-shadow: 0 0 0 2px rgba(229,193,88,0.15);
+  }
+  .form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .form-actions button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-confirm {
+    background: linear-gradient(135deg, #f0d98c, #d4af37);
+    color: #241a05;
+  }
+  .btn-cancel {
+    background: rgba(255,255,255,0.06);
+    color: #888;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+  }
+  .selected-tier-label {
+    font-size: 13px;
+    color: #E5C158;
+    margin-bottom: 14px;
+    padding: 10px;
+    background: rgba(229,193,88,0.08);
+    border-radius: 8px;
+    text-align: center;
+  }
+  .secure-note {
+    text-align: center;
+    font-size: 12px;
+    color: #555;
+    margin-top: 24px;
+  }
+  .secure-note span { color: #7ee2a4; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-inner">
+      <div style="display:flex;justify-content:center;margin-bottom:16px;">
+        <img src="assets/logo.svg" alt="Reality FX" class="brand-logo" style="width:220px;">
+      </div>
+      <h1 class="display">Choose Your <span class="gold">Programme</span></h1>
+      <p class="quote" style="margin-top:12px;">Select the pathway that matches your ambition. Every programme includes full Academy access — your tier determines the depth of support and the doors that open.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="programme-grid" id="programmes"></div>
+    <p class="secure-note"><span>🔒</span> Payment is processed securely through Payfast. Your card details never touch our servers.</p>
+  </div>
+</div>
+
+<!-- Payment form overlay -->
+<div class="payment-form-overlay" id="pay-overlay">
+  <div class="payment-form-box">
+    <h3>Complete Your Enrollment</h3>
+    <div class="selected-tier-label" id="selected-tier-label"></div>
+    <form id="pay-form" onsubmit="return submitPayment(event)">
+      <div class="field">
+        <label>Full Name <span style="color:#E5C158;">*</span></label>
+        <input type="text" id="pay-name" placeholder="Your full name" required>
+      </div>
+      <div class="field">
+        <label>Email Address <span style="color:#E5C158;">*</span></label>
+        <input type="email" id="pay-email" placeholder="you@example.com" required>
+      </div>
+      <div class="field">
+        <label>Phone (optional)</label>
+        <input type="tel" id="pay-phone" placeholder="+27...">
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" onclick="closeOverlay()">Cancel</button>
+        <button type="submit" class="btn-confirm" id="pay-submit">Pay Now →</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var TIERS = [
+    { id: 'BASIC',   name: 'Reality FX — BASIC',   price: 1500,   tagline: 'Entry-level self-directed pathway', features: ['Self-directed Academy access','Standard Intelligent Assessments','Student Portal access','RFX wallet','Email support'], notIncluded: ['Private mentoring','Live learning sessions','Arena access','Advanced analytics'] },
+    { id: 'CORE',    name: 'Reality FX — CORE',    price: 2600,   tagline: 'Flagship foundation programme', features: ['Full Academy OS access','Structured learning path','Core Intelligent Assessments','Student Portal + wallet','Workshops','Email + live support'], notIncluded: ['Private mentoring','Live sessions','Arena access'], recommended: true },
+    { id: 'PRO',     name: 'Reality FX — PRO',     price: 4500,   tagline: 'Practical development + Arena', features: ['Everything in CORE','Arena access','Practical exercises','Advanced workshops','Challenging assessments','Enhanced development resources'], notIncluded: ['Private mentoring','Live sessions'] },
+    { id: 'ELITE',   name: 'Reality FX — ELITE',   price: 6000,   tagline: 'Advanced competency pathway', features: ['Everything in PRO','Elite assessments','Advanced Arena / workshops','Advanced performance analytics','Higher-level trading preparation'], notIncluded: ['Private mentoring','Live sessions'] },
+    { id: 'MASTERY', name: 'Reality FX — MASTERY',  price: 10000,  tagline: 'Premium / private development', features: ['Everything in ELITE','Private mentoring','Personalised development','Specialised challenges','Direct high-level guidance','Live learning sessions','Individual performance review'], notIncluded: [] },
+  ];
+
+  var grid = document.getElementById('programmes');
+  var overlay = document.getElementById('pay-overlay');
+  var selectedTier = null;
+
+  // Render programme cards
+  var html = '';
+  for (var i = 0; i < TIERS.length; i++) {
+    var t = TIERS[i];
+    var featuresHtml = '';
+    for (var j = 0; j < t.features.length; j++) {
+      featuresHtml += '<li>' + t.features[j] + '</li>';
+    }
+    for (var k = 0; k < t.notIncluded.length; k++) {
+      featuresHtml += '<li class="not-included">' + t.notIncluded[k] + '</li>';
+    }
+    html += '<div class="programme-card' + (t.recommended ? ' recommended' : '') + '" data-tier="' + t.id + '">' +
+      '<div class="tier-name">' + t.name.replace('Reality FX — ', '') + '</div>' +
+      '<div class="tier-tagline">' + t.tagline + '</div>' +
+      '<div class="tier-price"><span class="currency">R</span>' + t.price.toLocaleString() + '</div>' +
+      '<ul class="tier-features">' + featuresHtml + '</ul>' +
+      '<button class="enrol-btn" onclick="selectTier(\'' + t.id + '\')">' + (t.recommended ? 'Enrol Now ★' : 'Enrol Now') + '</button>' +
+      '</div>';
+  }
+  grid.innerHTML = html;
+
+  // Expose to onclick
+  window.selectTier = function (tierId) {
+    selectedTier = TIERS.find(function (t) { return t.id === tierId; });
+    if (!selectedTier) return;
+    document.getElementById('selected-tier-label').textContent = selectedTier.name + ' — R' + selectedTier.price.toLocaleString();
+    overlay.classList.add('active');
+    document.getElementById('pay-name').focus();
+  };
+
+  window.closeOverlay = function () {
+    overlay.classList.remove('active');
+    selectedTier = null;
+  };
+
+  window.submitPayment = function (e) {
+    e.preventDefault();
+    if (!selectedTier) return false;
+
+    var name = document.getElementById('pay-name').value.trim();
+    var email = document.getElementById('pay-email').value.trim();
+    var phone = document.getElementById('pay-phone').value.trim();
+
+    if (!name || !email) return false;
+
+    var btn = document.getElementById('pay-submit');
+    btn.textContent = 'Processing...';
+    btn.disabled = true;
+
+    // Call the payfast-init Cloud Function to generate the signed form
+    var SEND_EMAIL_ENDPOINT = 'https://us-central1-reality-fx-production-25796.cloudfunctions.net/sendEmail';
+    var PAYFAST_INIT_ENDPOINT = 'https://us-central1-reality-fx-production-25796.cloudfunctions.net/payfastInit';
+
+    fetch(PAYFAST_INIT_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tier: selectedTier.id,
+        email: email,
+        studentName: name,
+        phone: phone,
+      }),
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data.ok && data.form) {
+        // Replace the page with the auto-submitting Payfast form
+        document.open();
+        document.write(data.form);
+        document.close();
+      } else {
+        alert('Payment setup failed: ' + (data.error || 'Unknown error'));
+        btn.textContent = 'Pay Now →';
+        btn.disabled = false;
+      }
+    })
+    .catch(function (err) {
+      alert('Network error — please try again.');
+      btn.textContent = 'Pay Now →';
+      btn.disabled = false;
+    });
+
+    return false;
+  };
+
+  // Close overlay on backdrop click
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) window.closeOverlay();
+  });
+})();
+</script>
+</body>
+</html>
