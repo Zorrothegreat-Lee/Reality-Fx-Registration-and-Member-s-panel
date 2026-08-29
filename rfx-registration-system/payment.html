@@ -335,8 +335,8 @@
     btn.disabled = true;
 
     // Call the payfast-init Cloud Function to generate the signed form
-    var SEND_EMAIL_ENDPOINT = 'https://us-central1-reality-fx-production-25796.cloudfunctions.net/sendEmail';
-    var PAYFAST_INIT_ENDPOINT = 'https://us-central1-reality-fx-production-25796.cloudfunctions.net/payfastInit';
+    var SEND_EMAIL_ENDPOINT = 'https://reality-fx-production-25796.web.app/api/send-email';
+    var PAYFAST_INIT_ENDPOINT = 'https://reality-fx-production-25796.web.app/api/payfast-init';
 
     fetch(PAYFAST_INIT_ENDPOINT, {
       method: 'POST',

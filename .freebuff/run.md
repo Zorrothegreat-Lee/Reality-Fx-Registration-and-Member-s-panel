@@ -97,3 +97,25 @@ unique). Reception/staff pills now honestly say "no one on duty right now —
 coverage gap" instead of "checking coverage…" when the team exists but
 nobody is clocked in. Version stamps `v=20260810-58`. FOR-LEE.md §9.50;
 Desktop: `RFX-FOR-LEE-UPDATE-v58.md`.
+
+## Port note (15 Aug 2026, v72)
+
+- The canonical preview now runs on **8126** (the current tree). 8125 was
+  found occupied by an app-managed server serving a **stale snapshot**
+  (`20260813-01` — pre-gate). If 8125 comes back on a future app restart it
+  will serve the current tree and 8126 can be retired. Legacy demo forks
+  8123/8124 (OS-thread demo, no `/api/gate`) are left untouched.
+- The portal is now a PWA: `manifest.webmanifest` + `sw.js` wired into
+  index/register/member (network-first HTML, stale-while-revalidate static,
+  `/api/` never intercepted).
+
+## Update (same pass, after admin approval)
+
+- The three legacy forks (8123, 8124, 8125) were serving a stale snapshot
+  and have been **retired**. The current tree now serves **8125** only —
+  `RFX_ROOT="$(pwd)" RFX_PORT=8125 perl ../.freebuff/serve_fork.pl` from
+  `rfx-registration-system`. The OS will re-point to it automatically when
+  its academy health check runs.
+- Portal icons generated: `assets/icon-192.png` + `assets/icon-512.png`
+  (regenerate with `perl ../.freebuff/tools/…` → `powershell
+  -File ../.freebuff/tools/make-portal-icons.ps1`).

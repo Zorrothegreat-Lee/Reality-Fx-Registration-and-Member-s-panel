@@ -1,0 +1,73 @@
+{
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "system-a",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": []
+    }
+  ],
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/open-os",
+        "function": "openOs"
+      },
+      {
+        "source": "/api/verify-token",
+        "function": "verifyToken"
+      },
+      {
+        "source": "/api/send-email",
+        "function": "sendEmail"
+      },
+      {
+        "source": "/api/payfast-init",
+        "function": "payfastInit"
+      },
+      {
+        "source": "/api/payfast-itn",
+        "function": "payfastItn"
+      },
+      {
+        "source": "/api/**",
+        "function": "apiRouter"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          },
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin-when-cross-origin"
+          },
+          {
+            "key": "Strict-Transport-Security",
+            "value": "max-age=31536000; includeSubDomains"
+          }
+        ]
+      }
+    ]
+  }
+}
